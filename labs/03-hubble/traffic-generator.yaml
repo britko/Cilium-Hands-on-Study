@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: frontend-to-api
+  namespace: app
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: frontend-traffic
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: curl
+              image: curlimages/curl:8.10.1
+              command:
+                - sh
+                - -c
+                - |
+                  curl -sS http://api.app.svc.cluster.local/get
+                  curl -sS http://api.app.svc.cluster.local/status/418 || true
+                  nslookup kubernetes.default.svc.cluster.local

@@ -1,0 +1,17 @@
+ipam:
+  mode: kubernetes
+
+kubeProxyReplacement: false
+
+hubble:
+  enabled: true
+  relay:
+    enabled: true
+  ui:
+    enabled: true
+
+operator:
+  replicas: 1
+
+image:
+  pullPolicy: IfNotPresent

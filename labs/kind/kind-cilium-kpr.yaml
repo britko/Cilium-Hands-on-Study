@@ -1,0 +1,17 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: cilium-study-kpr
+networking:
+  disableDefaultCNI: true
+  kubeProxyMode: none
+  podSubnet: 10.20.0.0/16
+  serviceSubnet: 10.21.0.0/16
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 30080
+        listenAddress: 127.0.0.1
+        protocol: TCP
+  - role: worker
+  - role: worker
