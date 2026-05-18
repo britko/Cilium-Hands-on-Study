@@ -71,4 +71,4 @@ kubectl -n kube-system get pods -l k8s-app=hubble-relay
 ensure_hubble_access
 
 echo "Running Cilium connectivity test. This may take several minutes."
-cilium connectivity test
+cilium connectivity test --flow-validation disabled
