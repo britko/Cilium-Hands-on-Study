@@ -26,10 +26,12 @@ kubectl -n app exec "$pod" -- curl -sS http://api/get
 ## Endpoint와 Identity 확인
 
 ```bash
-cilium endpoint list
-cilium identity list
+kubectl -n kube-system exec ds/cilium -- cilium-dbg endpoint list
+kubectl -n kube-system exec ds/cilium -- cilium-dbg identity list
 kubectl -n app get pods --show-labels -o wide
 ```
+
+로컬 `cilium` CLI는 클러스터 설치, 상태 확인, connectivity test 같은 외부 제어용 명령입니다. Endpoint, identity, service map처럼 Cilium agent가 노드 안에서 관리하는 datapath 상태는 Cilium DaemonSet 안의 `cilium-dbg`로 확인합니다.
 
 관찰 포인트:
 
@@ -40,7 +42,7 @@ kubectl -n app get pods --show-labels -o wide
 ## Service Datapath 확인
 
 ```bash
-cilium service list
+kubectl -n kube-system exec ds/cilium -- cilium-dbg service list
 kubectl -n app get svc api -o wide
 kubectl -n app get endpointslice -l kubernetes.io/service-name=api
 ```
@@ -49,18 +51,24 @@ kubectl -n app get endpointslice -l kubernetes.io/service-name=api
 
 1. Service selector가 실제 Pod label과 맞는지 확인합니다.
 2. EndpointSlice에 backend Pod가 있는지 확인합니다.
-3. Cilium service list에 frontend/backend mapping이 반영되었는지 확인합니다.
+3. `cilium-dbg service list`에 frontend/backend mapping이 반영되었는지 확인합니다.
 4. Hubble에서 DROP 또는 FORWARDED flow를 확인합니다.
 
 ## Cilium Agent 내부 상태
 
 ```bash
 kubectl -n kube-system exec ds/cilium -- cilium-dbg status
-kubectl -n kube-system exec ds/cilium -- cilium-dbg bpf map list
 kubectl -n kube-system exec ds/cilium -- cilium-dbg endpoint list
+kubectl -n kube-system exec ds/cilium -- cilium-dbg bpf lb list
+kubectl -n kube-system exec ds/cilium -- cilium-dbg bpf endpoint list
+kubectl -n kube-system exec ds/cilium -- cilium-dbg bpf ipcache list
 ```
 
-`cilium-dbg`는 Cilium agent 컨테이너 안에서 datapath 상태를 더 자세히 볼 때 사용합니다.
+`cilium-dbg`는 Cilium agent 컨테이너 안에서 datapath 상태를 더 자세히 볼 때 사용합니다. 현재 Cilium 버전에서는 전체 BPF map을 한 번에 나열하는 방식보다 목적별 하위 명령을 사용합니다.
+
+- `bpf lb list`: Service frontend와 backend Pod mapping을 확인합니다.
+- `bpf endpoint list`: 로컬 노드의 endpoint map을 확인합니다.
+- `bpf ipcache list`: Pod IP, node IP, CIDR과 security identity mapping을 확인합니다.
 
 ## 실전 예시: Pod IP 변경 후 통신 확인
 
@@ -71,8 +79,9 @@ Windows WSL2/macOS/Linux Bash:
 ```bash
 kubectl -n app delete pod -l app=api
 kubectl -n app rollout status deploy/api
-cilium endpoint list
-cilium identity list
+kubectl -n kube-system exec ds/cilium -- cilium-dbg endpoint list
+kubectl -n kube-system exec ds/cilium -- cilium-dbg identity list
+pod="$(kubectl -n app get pod -l app=frontend -o jsonpath='{.items[0].metadata.name}')"
 kubectl -n app exec "$pod" -- curl -sS http://api/get
 ```
 
