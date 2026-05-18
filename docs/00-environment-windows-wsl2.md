@@ -46,11 +46,40 @@ docker ps
 
 `id -nG` 출력에 `docker`가 포함되어야 합니다. `docker ps`에서 `/var/run/docker.sock` 권한 오류가 나면 그룹 변경이 현재 세션에 아직 반영되지 않은 상태이므로 `newgrp docker`를 실행하거나 Ubuntu 터미널을 새로 엽니다.
 
+## kind 클러스터
+
+`create-kind-cluster.sh`는 `kind`, `kubectl` CLI가 없을 때 프로젝트 로컬 `tools/bin`에 자동 설치하고 kind 클러스터를 생성합니다.
+또한 Cilium connectivity test의 `json-mock` Pod가 파일 watcher 한도 때문에 `CrashLoopBackOff`가 나지 않도록 kind 노드의 `nofile`과 inotify 한도를 조정합니다.
+
+```bash
+bash scripts/create-kind-cluster.sh
+```
+
 ## 필수 도구
 
-`create-kind-cluster.sh`는 `kind`, `kubectl` CLI가 없을 때 프로젝트 로컬 `tools/bin`에 자동 설치합니다.
+`helm`, `cilium`, `hubble` CLI는 WSL2 Ubuntu 안에 설치합니다. `cilium`, `hubble`은 프로젝트 로컬 `tools/bin`에 설치합니다.
 
-`helm`, `cilium`, `hubble` CLI는 [01. Cilium 설치](01-cilium-install.md)에서 수동으로 설치합니다. Cilium 설치 이후 실습도 문서의 명령을 직접 실행하면서 진행합니다.
+Helm:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+```
+
+Cilium/Hubble CLI:
+
+```bash
+bash scripts/install-cilium-tools.sh
+source scripts/use-local-tools.sh
+```
+
+설치 확인:
+
+```bash
+kubectl version --client
+helm version
+cilium version
+hubble version
+```
 
 새 터미널에서 `kubectl` alias와 completion을 쓰려면 `~/.bashrc`에 로컬 도구 설정을 추가합니다.
 
@@ -59,12 +88,4 @@ bash scripts/use-local-tools.sh --install-bashrc
 source ~/.bashrc
 ```
 
-## 실습 시작
-
-kind 클러스터만 스크립트로 생성합니다.
-
-```bash
-bash scripts/create-kind-cluster.sh
-```
-
-이후 [01. Cilium 설치](01-cilium-install.md)부터는 Helm과 Cilium CLI 명령을 직접 실행하면서 진행합니다.
+이후 [01. Cilium 설치](01-cilium-install.md)부터는 Helm으로 Cilium을 설치하고 검증합니다.

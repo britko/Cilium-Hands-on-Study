@@ -41,18 +41,20 @@
 
 Windows 권장 경로는 WSL2 Ubuntu 안에서 Bash 스크립트와 문서를 함께 사용하는 방식입니다. macOS와 Linux도 같은 흐름입니다.
 
-1. OS별 환경 준비 문서([Windows WSL2](docs/00-environment-windows-wsl2.md), [macOS](docs/00-environment-macos.md), [Linux](docs/00-environment-linux.md))에서 Docker와 kind 클러스터를 준비합니다.
-2. [01. Cilium 설치](docs/01-cilium-install.md)부터는 Helm과 Cilium CLI 명령을 직접 실행하면서 진행합니다.
+1. OS별 환경 준비 문서([Windows WSL2](docs/00-environment-windows-wsl2.md), [macOS](docs/00-environment-macos.md), [Linux](docs/00-environment-linux.md))에서 Docker, kind 클러스터, CLI 도구를 준비합니다.
+2. [01. Cilium 설치](docs/01-cilium-install.md)부터는 Helm으로 Cilium을 설치하고 검증합니다.
 
 ```bash
 bash scripts/create-kind-cluster.sh
+bash scripts/install-cilium-tools.sh
+source scripts/use-local-tools.sh
 ```
 
 Windows host PowerShell 실행은 지원 경로에서 제외합니다. Windows 사용자는 WSL2 Ubuntu 안에서 Bash 스크립트를 실행합니다.
 
-`create-kind-cluster` 스크립트는 `kind`, `kubectl` CLI가 없으면 프로젝트 로컬 `tools/bin`에 자동 설치합니다. Cilium 설치 이후 단계는 문서의 수동 명령으로 학습합니다.
+`create-kind-cluster` 스크립트는 `kind`, `kubectl` CLI가 없으면 프로젝트 로컬 `tools/bin`에 자동 설치합니다. `install-cilium-tools` 스크립트는 `cilium`, `hubble` CLI를 같은 경로에 설치합니다. Cilium 설치 이후 단계는 문서의 수동 명령으로 학습합니다.
 
-새 터미널에서 `kubectl` alias와 completion을 쓰려면 `~/.bashrc` 또는 `~/.zshrc`에 로컬 도구 설정을 추가합니다.
+새 터미널에서 `kubectl` alias와 completion을 쓰려면 OS별 환경 준비 문서에 따라 셸 설정 파일에 로컬 도구 설정을 추가합니다. Bash 예시는 다음과 같습니다.
 
 ```bash
 bash scripts/use-local-tools.sh --install-bashrc

@@ -6,56 +6,11 @@
 - Hubble Relay/UI를 활성화합니다.
 - 설치 실패 시 확인해야 할 기본 지점을 익힙니다.
 
-이 장부터는 스크립트 대신 문서의 명령을 직접 실행하면서 진행합니다. kind 클러스터는 OS별 환경 준비 문서에서 이미 생성했다고 가정합니다.
+이 장부터는 스크립트 대신 문서의 명령을 직접 실행하면서 진행합니다. kind 클러스터와 `kubectl`, `helm`, `cilium`, `hubble` CLI는 OS별 환경 준비 문서에서 이미 준비했다고 가정합니다.
 
 - [Windows WSL2](00-environment-windows-wsl2.md)
 - [macOS](00-environment-macos.md)
 - [Linux](00-environment-linux.md)
-
-## CLI 준비
-
-다음 CLI가 PATH에 있어야 합니다.
-
-- `kubectl`: `create-kind-cluster.sh`가 자동 설치했거나 직접 설치
-- `helm`
-- `cilium`
-- `hubble`
-
-Helm 설치 예시:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-```
-
-Cilium CLI와 Hubble CLI는 공식 릴리스에서 OS/아키텍처에 맞는 바이너리를 받아 PATH에 추가합니다.
-
-Linux amd64 예시:
-
-```bash
-curl -L --fail https://github.com/cilium/cilium-cli/releases/latest/download/cilium-linux-amd64.tar.gz | tar xz -C /tmp
-sudo install /tmp/cilium /usr/local/bin/cilium
-
-curl -L --fail https://github.com/cilium/hubble/releases/latest/download/hubble-linux-amd64.tar.gz | tar xz -C /tmp
-sudo install /tmp/hubble /usr/local/bin/hubble
-```
-
-macOS는 `darwin-amd64` 또는 `darwin-arm64` asset을 사용합니다.
-
-설치 확인:
-
-```bash
-kubectl version --client
-helm version
-cilium version
-hubble version
-```
-
-새 터미널에서 `k` alias와 completion을 쓰려면 `~/.bashrc` 또는 `~/.zshrc`에 로컬 도구 설정을 추가합니다.
-
-```bash
-bash scripts/use-local-tools.sh --install-bashrc
-source ~/.bashrc
-```
 
 ## Helm으로 Cilium 설치
 
