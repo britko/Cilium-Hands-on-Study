@@ -17,6 +17,14 @@ kubectl apply -f labs/03-hubble/traffic-generator.yaml
 
 ## Hubble 상태 확인
 
+`hubble` CLI는 로컬 `127.0.0.1:4245`로 Hubble Relay에 접속합니다. 새 터미널을 열어 다음 port-forward를 유지한 상태에서 이 장의 `hubble` 명령을 실행합니다.
+
+```bash
+kubectl -n kube-system port-forward svc/hubble-relay 4245:80
+```
+
+다른 터미널:
+
 ```bash
 hubble status
 cilium status
