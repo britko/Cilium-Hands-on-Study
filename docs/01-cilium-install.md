@@ -71,10 +71,12 @@ cilium hubble ui
 ## 연결성 테스트
 
 ```bash
-cilium connectivity test
+cilium connectivity test --flow-validation disabled
 ```
 
-이 테스트는 Cilium의 기본 datapath, service, DNS, policy 기능을 한 번에 검증합니다. 스터디 환경에서는 시간이 걸려도 첫 설치 후 반드시 실행합니다.
+이 테스트는 Cilium의 기본 datapath, service, DNS, policy 기능을 한 번에 검증합니다. 기본 kind 클러스터는 `kubeProxyReplacement=false`라 Service IP 흐름이 Hubble에서 backend Pod IP 흐름으로 관측될 수 있으므로, 최초 설치 검증에서는 flow validation을 끄고 실제 연결성에 집중합니다.
+
+Hubble flow validation은 [06. kube-proxy Replacement](06-kube-proxy-replacement.md)의 전용 클러스터에서 엄격하게 검증합니다.
 
 ## 설치 옵션 해설
 
@@ -117,7 +119,7 @@ kubectl -n kube-system logs deploy/cilium-operator --tail=100
 운영 설치는 단순히 `helm install`로 끝내지 않습니다.
 
 - Helm values를 GitOps 저장소에서 버전 관리합니다.
-- 업그레이드 전 `cilium status`, `cilium connectivity test`, `cilium sysdump`를 기준선으로 남깁니다.
+- 업그레이드 전 `cilium status`, `cilium connectivity test --flow-validation disabled`, `cilium sysdump`를 기준선으로 남깁니다.
 - 기존 NetworkPolicy 영향 범위를 Hubble flow로 확인합니다.
 - kube-proxy replacement, Gateway API, encryption 같은 기능은 별도 change window에서 켭니다.
 
