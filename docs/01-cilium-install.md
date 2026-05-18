@@ -6,37 +6,60 @@
 - Hubble Relay/UI를 활성화합니다.
 - 설치 실패 시 확인해야 할 기본 지점을 익힙니다.
 
-## 설치
+이 장부터는 스크립트 대신 문서의 명령을 직접 실행하면서 진행합니다. kind 클러스터는 OS별 환경 준비 문서에서 이미 생성했다고 가정합니다.
 
-기본 설치 값은 `labs/01-install/cilium-values.yaml`에 있습니다.
+- [Windows WSL2](00-environment-windows-wsl2.md)
+- [macOS](00-environment-macos.md)
+- [Linux](00-environment-linux.md)
 
-Windows PowerShell:
+## CLI 준비
 
-```powershell
-.\scripts\install-cilium.ps1
-```
+다음 CLI가 PATH에 있어야 합니다.
 
-macOS/Linux Bash:
+- `kubectl`: `create-kind-cluster.sh`가 자동 설치했거나 직접 설치
+- `helm`
+- `cilium`
+- `hubble`
+
+Helm 설치 예시:
 
 ```bash
-bash scripts/install-cilium.sh
+curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 ```
 
-수동으로 실행하려면 다음 명령을 사용합니다.
+Cilium CLI와 Hubble CLI는 공식 릴리스에서 OS/아키텍처에 맞는 바이너리를 받아 PATH에 추가합니다.
 
-Windows PowerShell:
+Linux amd64 예시:
 
-```powershell
-helm repo add cilium https://helm.cilium.io/
-helm repo update cilium
+```bash
+curl -L --fail https://github.com/cilium/cilium-cli/releases/latest/download/cilium-linux-amd64.tar.gz | tar xz -C /tmp
+sudo install /tmp/cilium /usr/local/bin/cilium
 
-helm upgrade --install cilium cilium/cilium `
-  --version 1.19.3 `
-  --namespace kube-system `
-  --values labs/01-install/cilium-values.yaml
+curl -L --fail https://github.com/cilium/hubble/releases/latest/download/hubble-linux-amd64.tar.gz | tar xz -C /tmp
+sudo install /tmp/hubble /usr/local/bin/hubble
 ```
 
-macOS/Linux Bash:
+macOS는 `darwin-amd64` 또는 `darwin-arm64` asset을 사용합니다.
+
+설치 확인:
+
+```bash
+kubectl version --client
+helm version
+cilium version
+hubble version
+```
+
+새 터미널에서 `k` alias와 completion을 쓰려면 `~/.bashrc` 또는 `~/.zshrc`에 로컬 도구 설정을 추가합니다.
+
+```bash
+bash scripts/use-local-tools.sh --install-bashrc
+source ~/.bashrc
+```
+
+## Helm으로 Cilium 설치
+
+기본 설치 값은 `labs/01-install/cilium-values.yaml`에 있습니다.
 
 ```bash
 helm repo add cilium https://helm.cilium.io/
@@ -48,7 +71,30 @@ helm upgrade --install cilium cilium/cilium \
   --values labs/01-install/cilium-values.yaml
 ```
 
+설치가 끝날 때까지 기다립니다.
+
+```bash
+kubectl -n kube-system rollout status ds/cilium --timeout=10m
+kubectl -n kube-system rollout status deploy/cilium-operator --timeout=10m
+```
+
+## Hubble 활성화
+
+Helm values에 Hubble 옵션이 포함되어 있어도 Relay/UI를 명시적으로 활성화합니다.
+
+```bash
+cilium hubble enable --ui
+```
+
 ## 검증
+
+`hubble` CLI는 로컬 `127.0.0.1:4245`로 Hubble Relay에 접속합니다. 별도 터미널에서 port-forward를 유지합니다.
+
+```bash
+kubectl -n kube-system port-forward svc/hubble-relay 4245:80
+```
+
+다른 터미널:
 
 ```bash
 cilium status --wait
@@ -106,9 +152,10 @@ kubectl -n kube-system logs deploy/cilium-operator --tail=100
 자주 발생하는 문제:
 
 - kind 클러스터 생성 시 `disableDefaultCNI`를 빼먹어 CNI가 중복됨
-- Docker Desktop이 실행 중이 아님
+- Docker Engine 또는 Colima 등 Docker 호환 런타임이 실행 중이 아님
 - 회사 VPN과 Pod/Service CIDR 충돌
 - Cilium CLI와 설치된 Cilium 버전의 호환성 문제
+- `hubble status` 실패: Hubble Relay port-forward가 열려 있지 않음
 
 ## 실전 운영 관점
 
@@ -127,4 +174,4 @@ Cilium만 제거하려면 다음을 실행합니다.
 helm uninstall cilium -n kube-system
 ```
 
-전체 kind 클러스터를 제거하려면 Windows에서는 `scripts/cleanup.ps1`, macOS/Linux에서는 `scripts/cleanup.sh`를 사용합니다.
+전체 kind 클러스터를 제거하려면 `scripts/cleanup.sh`를 사용합니다.
