@@ -16,14 +16,7 @@ kubectl -n app rollout status deploy/api
 
 트래픽을 발생시킵니다.
 
-Windows PowerShell:
-
-```powershell
-$pod = kubectl -n app get pod -l app=frontend -o jsonpath='{.items[0].metadata.name}'
-kubectl -n app exec $pod -- curl -sS http://api/get
-```
-
-macOS/Linux Bash:
+Windows WSL2/macOS/Linux Bash:
 
 ```bash
 pod="$(kubectl -n app get pod -l app=frontend -o jsonpath='{.items[0].metadata.name}')"
@@ -73,17 +66,7 @@ kubectl -n kube-system exec ds/cilium -- cilium-dbg endpoint list
 
 운영에서 배포나 노드 장애로 Pod IP는 계속 바뀝니다. Cilium 정책이 label/identity 기반으로 유지되는지 확인합니다.
 
-Windows PowerShell:
-
-```powershell
-kubectl -n app delete pod -l app=api
-kubectl -n app rollout status deploy/api
-cilium endpoint list
-cilium identity list
-kubectl -n app exec $pod -- curl -sS http://api/get
-```
-
-macOS/Linux Bash:
+Windows WSL2/macOS/Linux Bash:
 
 ```bash
 kubectl -n app delete pod -l app=api
