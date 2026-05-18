@@ -10,15 +10,7 @@
 
 kube-proxy replacement는 기존 클러스터 설정과 충돌할 수 있으므로 별도 kind 클러스터를 사용합니다.
 
-Windows PowerShell:
-
-```powershell
-.\scripts\create-kind-cluster.ps1 `
-  -ClusterName cilium-study-kpr `
-  -ConfigPath labs/kind/kind-cilium-kpr.yaml
-```
-
-macOS/Linux Bash:
+Windows WSL2/macOS/Linux Bash:
 
 ```bash
 bash scripts/create-kind-cluster.sh \
@@ -34,20 +26,19 @@ kubectl config use-context kind-cilium-study-kpr
 
 ## Cilium 설치
 
-Windows PowerShell:
-
-```powershell
-.\scripts\install-cilium.ps1 `
-  -Version 1.19.3 `
-  -ValuesPath labs/01-install/cilium-kpr-values.yaml
-```
-
-macOS/Linux Bash:
+[01. Cilium 설치](01-cilium-install.md)와 같은 방식으로 Helm으로 직접 설치합니다. values 파일만 kube-proxy replacement용으로 바꿉니다.
 
 ```bash
-bash scripts/install-cilium.sh \
+helm repo add cilium https://helm.cilium.io/
+helm repo update cilium
+
+helm upgrade --install cilium cilium/cilium \
   --version 1.19.3 \
+  --namespace kube-system \
   --values labs/01-install/cilium-kpr-values.yaml
+
+cilium hubble enable --ui
+cilium status --wait
 ```
 
 핵심 옵션:
