@@ -1,0 +1,14 @@
+prometheus:
+  enabled: true
+operator:
+  prometheus:
+    enabled: true
+hubble:
+  metrics:
+    enabled:
+      - dns
+      - drop
+      - tcp
+      - flow
+      - icmp
+      - http

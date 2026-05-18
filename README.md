@@ -1,6 +1,6 @@
 # Cilium Hands-on Study
 
-고급 Kubernetes 사용자를 위한 Cilium hands-on study 프로젝트입니다. 로컬 `kind` 클러스터에서 Cilium을 직접 설치하고, eBPF datapath, Hubble, NetworkPolicy, L7 policy, kube-proxy replacement, Gateway API, 운영 트러블슈팅까지 실전 시나리오 중심으로 다룹니다.
+Kubernetes 네트워킹 기본기를 갖춘 사용자를 위한 Cilium basic-to-advanced hands-on study 프로젝트입니다. 로컬 `kind` 클러스터에서 Cilium을 직접 설치하고, eBPF datapath, Hubble, NetworkPolicy, L7 policy, kube-proxy replacement, Gateway API, LoadBalancer IPAM/L2 Announcement, Cluster Mesh, BGP, Egress Gateway, encryption, 운영 트러블슈팅까지 기능별 개념과 검증 루틴 중심으로 다룹니다.
 
 ## 학습 목표
 
@@ -9,6 +9,7 @@
 - Kubernetes NetworkPolicy와 CiliumNetworkPolicy를 실무 기준으로 설계합니다.
 - kube-proxy 없는 클러스터에서 Cilium service handling을 검증합니다.
 - Gateway API를 Cilium으로 구동하고 north-south 트래픽을 라우팅합니다.
+- Cluster Mesh, BGP, Egress Gateway, encryption 같은 advanced 운영 네트워크 기능을 실습합니다.
 - `cilium sysdump`, `cilium connectivity test`, `hubble observe`를 활용한 장애 분석 루틴을 익힙니다.
 
 ## 대상 독자
@@ -35,7 +36,7 @@
 - [macOS](docs/00-environment-macos.md)
 - [Linux](docs/00-environment-linux.md)
 
-기본 실습은 Cilium `1.19.x` 안정 버전을 기준으로 작성했습니다. Gateway API 실습은 Cilium `1.19.x` 안정 문서 기준인 Gateway API CRD `v1.4.1`을 사용합니다.
+기본 실습은 Cilium `1.19.x` 안정 버전을 기준으로 작성했습니다. Gateway API 실습은 Cilium `1.19.x` 안정 문서 기준인 Gateway API CRD `v1.4.1`을 사용합니다. Advanced 과정은 `kind`를 기본으로 하되, BGP/Egress Gateway/encryption/host firewall처럼 실제 네트워크 특성이 중요한 주제는 선택 VM/bare metal 검증 경로를 함께 설명합니다.
 
 ## 빠른 시작
 
@@ -65,17 +66,29 @@ Cilium 설치와 검증은 [01. Cilium 설치](docs/01-cilium-install.md)의 Hel
 
 ## 커리큘럼
 
-1. 환경 준비: [Windows WSL2](docs/00-environment-windows-wsl2.md), [macOS](docs/00-environment-macos.md), [Linux](docs/00-environment-linux.md)
-2. [Cilium 설치](docs/01-cilium-install.md)
-3. [eBPF datapath 관찰](docs/02-ebpf-datapath.md)
-4. [Hubble observability](docs/03-hubble-observability.md)
-5. [NetworkPolicy와 CiliumNetworkPolicy](docs/04-network-policy.md)
-6. [L7 policy](docs/05-l7-policy.md)
-7. [kube-proxy replacement](docs/06-kube-proxy-replacement.md)
-8. [Gateway API](docs/07-gateway-api.md)
-9. [트러블슈팅](docs/08-troubleshooting.md)
-10. [실전 운영 패턴](docs/09-production-patterns.md)
-11. [전체 검증 체크리스트](docs/99-validation-checklist.md)
+- `00` 환경 준비: [Windows WSL2](docs/00-environment-windows-wsl2.md), [macOS](docs/00-environment-macos.md), [Linux](docs/00-environment-linux.md)
+- `01` [Cilium 설치](docs/01-cilium-install.md)
+- `02` [eBPF datapath 관찰](docs/02-ebpf-datapath.md)
+- `03` [Hubble observability](docs/03-hubble-observability.md)
+- `04` [NetworkPolicy와 CiliumNetworkPolicy](docs/04-network-policy.md)
+- `05` [L7 policy](docs/05-l7-policy.md)
+- `06` [kube-proxy replacement](docs/06-kube-proxy-replacement.md)
+- `07` [Gateway API](docs/07-gateway-api.md)
+- `08` [LoadBalancer IPAM과 L2 Announcement](docs/08-loadbalancer-ipam-l2.md)
+- `09` [트러블슈팅](docs/09-troubleshooting.md)
+- `10` [실전 운영 패턴](docs/10-production-patterns.md)
+- `11` [Advanced Lab Topologies](docs/11-advanced-lab-topologies.md)
+- `12` [Cluster Mesh](docs/12-cluster-mesh.md)
+- `13` [BGP Control Plane](docs/13-bgp-control-plane.md)
+- `14` [Egress Gateway](docs/14-egress-gateway.md)
+- `15` [kube-proxy Replacement Deep Dive](docs/15-kube-proxy-replacement-deep-dive.md)
+- `16` [Transparent Encryption](docs/16-transparent-encryption.md)
+- `17` [Gateway API Advanced & GAMMA](docs/17-gateway-api-advanced-gamma.md)
+- `18` [Mutual Auth & SPIRE](docs/18-mutual-auth-spire.md)
+- `19` [Policy Design at Scale & Host Firewall](docs/19-policy-design-at-scale-host-firewall.md)
+- `20` [Observability Metrics](docs/20-observability-metrics.md)
+- `21` [Upgrade & Advanced Troubleshooting](docs/21-upgrade-advanced-troubleshooting.md)
+- `99` [전체 검증 체크리스트](docs/99-validation-checklist.md)
 
 ## 실전 시나리오
 
@@ -87,6 +100,7 @@ Cilium 설치와 검증은 [01. Cilium 설치](docs/01-cilium-install.md)의 Hel
 - Hubble flow를 사용해 장애 신고 시 실제 차단 지점을 찾습니다.
 - kube-proxy replacement 환경에서 Service, NodePort, LoadBalancer 동작을 검증합니다.
 - Gateway API를 이용해 서비스별 라우팅과 외부 진입점을 관리합니다.
+- BGP, Egress Gateway, Cluster Mesh로 온프레미스/멀티클러스터 운영 패턴을 검증합니다.
 - 신규 서비스 온보딩에 사용할 zero-trust namespace baseline, SaaS egress allowlist, 내부 API L7 guardrail 예제를 제공합니다.
 
 ## 저장소 구조
@@ -103,8 +117,20 @@ Cilium 설치와 검증은 [01. Cilium 설치](docs/01-cilium-install.md)의 Hel
 │   ├── 05-l7-policy/
 │   ├── 06-kube-proxy-replacement/
 │   ├── 07-gateway-api/
-│   ├── 08-troubleshooting/
-│   └── 09-production-examples/
+│   ├── 08-loadbalancer-ipam-l2/
+│   ├── 09-troubleshooting/
+│   ├── 10-production-examples/
+│   ├── 11-advanced-lab-topologies/
+│   ├── 12-cluster-mesh/
+│   ├── 13-bgp-control-plane/
+│   ├── 14-egress-gateway/
+│   ├── 15-kpr-deep-dive/
+│   ├── 16-transparent-encryption/
+│   ├── 17-gateway-api-advanced-gamma/
+│   ├── 18-mutual-auth-spire/
+│   ├── 19-policy-host-firewall/
+│   ├── 20-observability-metrics/
+│   └── 21-upgrade-troubleshooting/
 └── scripts/
     └── *.sh
 ```

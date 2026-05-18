@@ -1,0 +1,12 @@
+ipam:
+  mode: kubernetes
+kubeProxyReplacement: true
+egressGateway:
+  enabled: true
+bpf:
+  masquerade: true
+hubble:
+  relay:
+    enabled: true
+  ui:
+    enabled: true

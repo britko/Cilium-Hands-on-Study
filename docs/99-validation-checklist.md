@@ -141,15 +141,63 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v
 kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.4.1/config/crd/standard/gateway.networking.k8s.io_referencegrants.yaml
 kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.4.1/config/crd/standard/gateway.networking.k8s.io_grpcroutes.yaml
 kubectl apply -f labs/07-gateway-api/gateway-demo.yaml
-kubectl -n gateway-demo get gateway,httproute
+kubectl -n gateway-demo get gateway,httproute,svc
+svc="$(kubectl -n gateway-demo get svc -l io.cilium.gateway/owning-gateway=cilium-gateway -o jsonpath='{.items[0].metadata.name}')"
+node_port="$(kubectl -n gateway-demo get svc "$svc" -o jsonpath='{.spec.ports[0].nodePort}')"
+node="$(kubectl get node -o jsonpath='{.items[0].metadata.name}')"
+docker exec "$node" curl -sS "http://127.0.0.1:${node_port}/get"
 ```
 
 통과 기준:
 
 - Gateway와 HTTPRoute가 Accepted 상태
+- Cilium Gateway Service가 NodePort로 생성됨
+- kind 노드 컨테이너 안에서 NodePort `/get` 호출 성공
 - Cilium operator 로그에 CRD 누락 오류가 없음
 
-## 8. 실전 운영 패턴
+## 8. LoadBalancer IPAM과 L2 Announcement
+
+선택 심화 검증입니다. 자세한 절차는 [08. LoadBalancer IPAM과 L2 Announcement](08-loadbalancer-ipam-l2.md)를 따릅니다.
+
+```bash
+kubectl apply -f labs/07-gateway-api/gateway-demo.yaml
+kubectl apply -f labs/08-loadbalancer-ipam-l2/lb-ipam-l2.yaml
+kubectl get ippools
+kubectl -n gateway-demo get svc -l io.cilium.gateway/owning-gateway=cilium-gateway-lb -o wide
+lb_svc="$(kubectl -n gateway-demo get svc -l io.cilium.gateway/owning-gateway=cilium-gateway-lb -o jsonpath='{.items[0].metadata.name}')"
+vip="$(kubectl -n gateway-demo get svc "$lb_svc" -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
+node="$(kubectl get node -o jsonpath='{.items[0].metadata.name}')"
+docker exec "$node" curl -sS "http://${vip}/get"
+```
+
+통과 기준:
+
+- Gateway용 LoadBalancer Service에 `EXTERNAL-IP`가 할당됨
+- `kubectl -n kube-system get lease | grep cilium-l2announce`에서 lease 확인
+- kind 노드 컨테이너 안에서 VIP `/get` 호출 성공
+
+## 9. 트러블슈팅
+
+Windows WSL2/macOS/Linux Bash:
+
+```bash
+kubectl config use-context kind-cilium-study
+kubectl apply -f labs/02-ebpf-datapath/bookinfo-lite.yaml
+kubectl apply -f labs/09-troubleshooting/broken-service-selector.yaml
+pod="$(kubectl -n app get pod -l app=frontend -o jsonpath='{.items[0].metadata.name}')"
+kubectl -n app exec "$pod" -- curl -m 3 -sS http://api-broken/get
+kubectl -n app get endpointslice -l kubernetes.io/service-name=api-broken
+kubectl -n app patch service api-broken -p '{"spec":{"selector":{"app":"api"}}}'
+kubectl -n app get endpointslice -l kubernetes.io/service-name=api-broken
+```
+
+통과 기준:
+
+- 잘못된 Service selector에서 endpoint가 비어 있는 상태 확인
+- selector 복구 후 `api-broken` EndpointSlice 생성 확인
+- Cilium 문제가 아니라 Kubernetes Service label 문제로 원인 분리
+
+## 10. 실전 운영 패턴
 
 Windows WSL2/macOS/Linux Bash:
 
@@ -157,14 +205,14 @@ Windows WSL2/macOS/Linux Bash:
 kubectl config use-context kind-cilium-study
 kubectl apply -f labs/02-ebpf-datapath/bookinfo-lite.yaml
 pod=$(kubectl -n app get pod -l app=frontend -o jsonpath='{.items[0].metadata.name}')
-kubectl apply -f labs/09-production-examples/namespace-zero-trust-baseline.yaml
+kubectl apply -f labs/10-production-examples/namespace-zero-trust-baseline.yaml
 kubectl -n app exec "$pod" -- curl -sS http://api/get
-kubectl apply -f labs/09-production-examples/saas-egress-allowlist.yaml
+kubectl apply -f labs/10-production-examples/saas-egress-allowlist.yaml
 kubectl -n app exec "$pod" -- curl -I https://api.github.com
 kubectl -n app exec "$pod" -- curl -m 5 -I https://example.com
 hubble observe --namespace app --verdict DROPPED --since 5m
-kubectl delete -f labs/09-production-examples/namespace-zero-trust-baseline.yaml --ignore-not-found
-kubectl apply -f labs/09-production-examples/internal-api-l7-guardrail.yaml
+kubectl delete -f labs/10-production-examples/namespace-zero-trust-baseline.yaml --ignore-not-found
+kubectl apply -f labs/10-production-examples/internal-api-l7-guardrail.yaml
 kubectl -n app exec "$pod" -- curl -sS http://api/get
 kubectl -n app exec "$pod" -- curl -m 5 -X POST -sS http://api/post
 ```
@@ -176,14 +224,95 @@ kubectl -n app exec "$pod" -- curl -m 5 -X POST -sS http://api/post
 - `GET /get`은 허용되고 `POST /post`는 L7 정책으로 차단
 - Hubble에서 허용/차단 flow와 DNS/HTTP 근거 확인 가능
 
-## 9. Cleanup
+## Advanced Validation
+
+Advanced 과정은 환경 의존성이 높으므로 core validation과 선택 validation을 분리합니다.
+
+### 12. Cluster Mesh
+
+```bash
+bash scripts/create-kind-cluster.sh --cluster-name cilium-east --config labs/kind/kind-cilium-clustermesh-east.yaml
+bash scripts/create-kind-cluster.sh --cluster-name cilium-west --config labs/kind/kind-cilium-clustermesh-west.yaml
+kubectl --context kind-cilium-east apply -f labs/12-cluster-mesh/east-app.yaml
+kubectl --context kind-cilium-west apply -f labs/12-cluster-mesh/west-app.yaml
+cilium clustermesh status --context kind-cilium-east
+cilium clustermesh status --context kind-cilium-west
+```
+
+통과 기준:
+
+- 두 클러스터의 Cluster Mesh status가 ready
+- global service 호출 성공
+- west backend 축소 후에도 장애 범위 확인 가능
+
+### 13. BGP Control Plane
+
+```bash
+docker compose -f labs/13-bgp-control-plane/frr/docker-compose.yaml up -d
+kubectl apply -f labs/13-bgp-control-plane/lb-pool.yaml
+kubectl apply -f labs/13-bgp-control-plane/bgp-policy.yaml
+kubectl apply -f labs/13-bgp-control-plane/demo-service.yaml
+kubectl -n kube-system exec ds/cilium -- cilium-dbg bgp peers
+docker exec cilium-frr vtysh -c "show bgp ipv4 unicast"
+```
+
+통과 기준:
+
+- BGP peer session established
+- LoadBalancer VIP route가 FRR에 표시됨
+
+### 14. Egress Gateway
+
+```bash
+kubectl apply -f labs/14-egress-gateway/demo-app.yaml
+kubectl apply -f labs/14-egress-gateway/egress-policy.yaml
+pod="$(kubectl -n egress-demo get pod -l app=client -o jsonpath='{.items[0].metadata.name}')"
+kubectl -n egress-demo exec "$pod" -- curl -sS https://ifconfig.me
+```
+
+통과 기준:
+
+- kind에서는 정책 object와 flow 확인
+- VM/bare metal에서는 외부 echo 서버의 source IP가 gateway 경로와 일치
+
+### 15-21. 운영 심화
+
+```bash
+kubectl apply --dry-run=client -f labs/15-kpr-deep-dive/source-ip-demo.yaml
+kubectl apply --dry-run=client -f labs/17-gateway-api-advanced-gamma/canary-app.yaml
+kubectl apply --dry-run=client -f labs/17-gateway-api-advanced-gamma/traffic-split-route.yaml
+kubectl apply --dry-run=client -f labs/19-policy-host-firewall/team-baseline.yaml
+kubectl apply --dry-run=client -f labs/19-policy-host-firewall/service-exception.yaml
+```
+
+통과 기준:
+
+- kind에서 가능한 manifest는 client dry-run 통과
+- encryption, mutual auth, metrics, upgrade 장은 사전 상태 기록과 rollback 명령이 문서에 포함됨
+
+## 22. Cleanup
 
 Windows WSL2/macOS/Linux Bash:
 
 ```bash
-kubectl delete -f labs/09-production-examples/internal-api-l7-guardrail.yaml --ignore-not-found
-kubectl delete -f labs/09-production-examples/saas-egress-allowlist.yaml --ignore-not-found
-kubectl delete -f labs/09-production-examples/namespace-zero-trust-baseline.yaml --ignore-not-found
+kubectl delete -f labs/19-policy-host-firewall/service-exception.yaml --ignore-not-found
+kubectl delete -f labs/19-policy-host-firewall/team-baseline.yaml --ignore-not-found
+kubectl delete -f labs/18-mutual-auth-spire/mutual-auth-policy.yaml --ignore-not-found
+kubectl delete -f labs/17-gateway-api-advanced-gamma/traffic-split-route.yaml --ignore-not-found
+kubectl delete -f labs/17-gateway-api-advanced-gamma/canary-app.yaml --ignore-not-found
+kubectl delete -f labs/15-kpr-deep-dive/source-ip-demo.yaml --ignore-not-found
+kubectl delete -f labs/14-egress-gateway/egress-policy.yaml --ignore-not-found
+kubectl delete -f labs/14-egress-gateway/demo-app.yaml --ignore-not-found
+kubectl delete -f labs/13-bgp-control-plane/demo-service.yaml --ignore-not-found
+kubectl delete -f labs/13-bgp-control-plane/bgp-policy.yaml --ignore-not-found
+kubectl delete -f labs/13-bgp-control-plane/lb-pool.yaml --ignore-not-found
+docker compose -f labs/13-bgp-control-plane/frr/docker-compose.yaml down
+kubectl delete -f labs/10-production-examples/internal-api-l7-guardrail.yaml --ignore-not-found
+kubectl delete -f labs/10-production-examples/saas-egress-allowlist.yaml --ignore-not-found
+kubectl delete -f labs/10-production-examples/namespace-zero-trust-baseline.yaml --ignore-not-found
+kubectl delete -f labs/09-troubleshooting/deny-dns-egress.yaml --ignore-not-found
+kubectl delete -f labs/09-troubleshooting/broken-service-selector.yaml --ignore-not-found
+kubectl delete -f labs/08-loadbalancer-ipam-l2/lb-ipam-l2.yaml --ignore-not-found
 kubectl delete -f labs/07-gateway-api/gateway-demo.yaml --ignore-not-found
 kubectl delete -f labs/06-kube-proxy-replacement/nodeport-demo.yaml --ignore-not-found
 kubectl delete -f labs/05-l7-policy/http-l7-policy.yaml --ignore-not-found
@@ -192,6 +321,11 @@ kubectl delete -f labs/04-network-policy/allow-frontend-to-api.yaml --ignore-not
 kubectl delete -f labs/04-network-policy/default-deny.yaml --ignore-not-found
 kubectl delete -f labs/03-hubble/traffic-generator.yaml --ignore-not-found
 kubectl delete -f labs/02-ebpf-datapath/bookinfo-lite.yaml --ignore-not-found
+kind delete cluster --name cilium-east
+kind delete cluster --name cilium-west
+kind delete cluster --name cilium-bgp
+kind delete cluster --name cilium-egress
+kind delete cluster --name cilium-encryption
 bash scripts/cleanup.sh
 ```
 

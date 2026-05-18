@@ -1,0 +1,11 @@
+ipam:
+  mode: kubernetes
+kubeProxyReplacement: false
+cluster:
+  name: east
+  id: 11
+hubble:
+  relay:
+    enabled: true
+  ui:
+    enabled: true

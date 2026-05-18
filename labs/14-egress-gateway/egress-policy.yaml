@@ -1,0 +1,15 @@
+apiVersion: cilium.io/v2
+kind: CiliumEgressGatewayPolicy
+metadata:
+  name: client-egress
+spec:
+  selectors:
+    - podSelector:
+        matchLabels:
+          app: client
+  destinationCIDRs:
+    - 0.0.0.0/0
+  egressGateway:
+    nodeSelector:
+      matchLabels:
+        kubernetes.io/os: linux

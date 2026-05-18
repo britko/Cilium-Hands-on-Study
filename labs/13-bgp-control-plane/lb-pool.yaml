@@ -1,0 +1,11 @@
+apiVersion: cilium.io/v2
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: bgp-demo-pool
+spec:
+  blocks:
+    - start: 172.18.255.220
+      stop: 172.18.255.230
+  serviceSelector:
+    matchLabels:
+      expose: bgp

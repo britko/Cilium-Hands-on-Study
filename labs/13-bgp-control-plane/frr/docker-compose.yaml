@@ -1,0 +1,14 @@
+services:
+  frr:
+    image: quay.io/frrouting/frr:10.2.1
+    container_name: cilium-frr
+    privileged: true
+    networks:
+      kind:
+        ipv4_address: 172.18.0.254
+    volumes:
+      - ./frr.conf:/etc/frr/frr.conf:ro
+      - ./daemons:/etc/frr/daemons:ro
+networks:
+  kind:
+    external: true

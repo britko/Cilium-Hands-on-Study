@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kpr-deep
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: echo
+  namespace: kpr-deep
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: echo
+  template:
+    metadata:
+      labels:
+        app: echo
+    spec:
+      containers:
+        - name: httpbin
+          image: mccutchen/go-httpbin:v2.14.0
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: echo-cluster
+  namespace: kpr-deep
+spec:
+  type: NodePort
+  externalTrafficPolicy: Cluster
+  selector:
+    app: echo
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+      nodePort: 30081
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: echo-local
+  namespace: kpr-deep
+spec:
+  type: NodePort
+  externalTrafficPolicy: Local
+  selector:
+    app: echo
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+      nodePort: 30082

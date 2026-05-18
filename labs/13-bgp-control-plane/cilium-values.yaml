@@ -1,0 +1,12 @@
+ipam:
+  mode: kubernetes
+kubeProxyReplacement: true
+gatewayAPI:
+  enabled: true
+bgpControlPlane:
+  enabled: true
+hubble:
+  relay:
+    enabled: true
+  ui:
+    enabled: true

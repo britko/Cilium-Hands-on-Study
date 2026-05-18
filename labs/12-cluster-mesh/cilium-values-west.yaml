@@ -1,0 +1,11 @@
+ipam:
+  mode: kubernetes
+kubeProxyReplacement: false
+cluster:
+  name: west
+  id: 12
+hubble:
+  relay:
+    enabled: true
+  ui:
+    enabled: true
