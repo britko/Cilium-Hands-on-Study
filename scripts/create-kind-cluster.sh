@@ -7,6 +7,9 @@ NODE_IMAGE="${NODE_IMAGE:-kindest/node:v1.34.0@sha256:7416a61b42b1662ca6ca89f020
 KIND_VERSION="${KIND_VERSION:-v0.30.0}"
 KUBECTL_VERSION="${KUBECTL_VERSION:-v1.34.0}"
 TOOLS_DIR="${TOOLS_DIR:-tools/bin}"
+KIND_NODE_NOFILE_LIMIT="${KIND_NODE_NOFILE_LIMIT:-1048576}"
+KIND_NODE_INOTIFY_MAX_USER_INSTANCES="${KIND_NODE_INOTIFY_MAX_USER_INSTANCES:-8192}"
+KIND_NODE_INOTIFY_MAX_USER_WATCHES="${KIND_NODE_INOTIFY_MAX_USER_WATCHES:-1048576}"
 
 case "$(uname -s)" in
   MINGW*|MSYS*|CYGWIN*)
@@ -26,6 +29,9 @@ Environment variables:
   KIND_VERSION  kind CLI version to auto-install if missing. Default: v0.30.0
   KUBECTL_VERSION  kubectl CLI version to auto-install if missing. Default: v1.34.0
   TOOLS_DIR     Local CLI install directory. Default: tools/bin
+  KIND_NODE_NOFILE_LIMIT  nofile soft/hard limit for kind node containerd/kubelet. Default: 1048576
+  KIND_NODE_INOTIFY_MAX_USER_INSTANCES  inotify instance limit inside kind nodes. Default: 8192
+  KIND_NODE_INOTIFY_MAX_USER_WATCHES  inotify watch limit inside kind nodes. Default: 1048576
 EOF
 }
 
@@ -172,6 +178,23 @@ ensure_kubectl() {
   fi
 }
 
+tune_kind_node_limits() {
+  local node
+  local pids
+  local pid
+
+  for node in $(kind get nodes --name "$CLUSTER_NAME"); do
+    echo "Tuning kind node limits: $node"
+    docker exec "$node" sysctl -w "fs.inotify.max_user_instances=$KIND_NODE_INOTIFY_MAX_USER_INSTANCES" >/dev/null
+    docker exec "$node" sysctl -w "fs.inotify.max_user_watches=$KIND_NODE_INOTIFY_MAX_USER_WATCHES" >/dev/null
+
+    pids="$(docker exec "$node" sh -c 'pidof containerd kubelet 2>/dev/null || true')"
+    for pid in $pids; do
+      docker exec "$node" prlimit --pid "$pid" --nofile="$KIND_NODE_NOFILE_LIMIT:$KIND_NODE_NOFILE_LIMIT" >/dev/null
+    done
+  done
+}
+
 ensure_kind
 ensure_kubectl
 require_command docker
@@ -185,5 +208,6 @@ else
   kind create cluster --name "$CLUSTER_NAME" --config "$CONFIG_PATH" --image "$NODE_IMAGE"
 fi
 
+tune_kind_node_limits
 kubectl cluster-info --context "kind-$CLUSTER_NAME"
 kubectl get nodes -o wide
