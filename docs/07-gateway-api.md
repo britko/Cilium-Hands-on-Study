@@ -24,22 +24,7 @@ Gateway API는 kube-proxy replacement와 L7 proxy가 필요합니다. 이 장은
 
 기존 설치를 업그레이드합니다.
 
-Windows PowerShell:
-
-```powershell
-helm upgrade cilium cilium/cilium `
-  --version 1.19.3 `
-  --namespace kube-system `
-  --reuse-values `
-  --set kubeProxyReplacement=true `
-  --set gatewayAPI.enabled=true
-
-kubectl -n kube-system rollout restart deploy/cilium-operator
-kubectl -n kube-system rollout restart ds/cilium
-cilium status --wait
-```
-
-macOS/Linux Bash:
+Windows WSL2/macOS/Linux Bash:
 
 ```bash
 helm upgrade cilium cilium/cilium \
@@ -56,14 +41,7 @@ cilium status --wait
 
 GatewayClass를 확인합니다.
 
-Windows PowerShell:
-
-```powershell
-kubectl get gatewayclass
-kubectl -n kube-system logs deploy/cilium-operator --tail=100 | Select-String gateway
-```
-
-macOS/Linux Bash:
+Windows WSL2/macOS/Linux Bash:
 
 ```bash
 kubectl get gatewayclass
@@ -79,14 +57,7 @@ kubectl -n gateway-demo get gateway,httproute,svc,pod
 
 kind에는 기본 LoadBalancer 구현이 없으므로 Gateway Service에 port-forward로 접근합니다.
 
-Windows PowerShell:
-
-```powershell
-$svc = kubectl -n gateway-demo get svc -l io.cilium.gateway/owning-gateway=cilium-gateway -o jsonpath='{.items[0].metadata.name}'
-kubectl -n gateway-demo port-forward service/$svc 8081:80
-```
-
-macOS/Linux Bash:
+Windows WSL2/macOS/Linux Bash:
 
 ```bash
 svc="$(kubectl -n gateway-demo get svc -l io.cilium.gateway/owning-gateway=cilium-gateway -o jsonpath='{.items[0].metadata.name}')"
@@ -118,17 +89,7 @@ Gateway API는 Ingress보다 역할 분리가 좋습니다.
 
 ## 실패 시 확인
 
-Windows PowerShell:
-
-```powershell
-kubectl get crd | Select-String gateway.networking.k8s.io
-kubectl get gatewayclass
-kubectl -n gateway-demo describe gateway cilium-gateway
-kubectl -n gateway-demo describe httproute web
-kubectl -n kube-system logs deploy/cilium-operator --tail=200
-```
-
-macOS/Linux Bash:
+Windows WSL2/macOS/Linux Bash:
 
 ```bash
 kubectl get crd | grep gateway.networking.k8s.io
