@@ -12,9 +12,9 @@
 
 ```bash
 cilium status
-cilium connectivity test
+cilium connectivity test --flow-validation disabled
 kubectl get pods -A -o wide
-hubble observe --last 5m
+hubble observe --since 5m
 kubectl -n kube-system logs -l k8s-app=cilium --tail=100
 ```
 
@@ -49,7 +49,7 @@ kubectl -n app exec "$pod" -- curl -m 3 -sS http://api-broken/get
 ```bash
 kubectl -n app get svc api-broken -o wide
 kubectl -n app get endpointslice -l kubernetes.io/service-name=api-broken
-cilium service list
+kubectl -n kube-system exec ds/cilium -- cilium-dbg service list
 ```
 
 원인:
@@ -78,8 +78,8 @@ kubectl -n app exec "$pod" -- curl -m 5 -sS http://api/get
 진단:
 
 ```bash
-hubble observe --namespace app --protocol dns --last 5m
-hubble observe --namespace app --verdict DROPPED --last 5m
+hubble observe --namespace app --protocol dns --since 5m
+hubble observe --namespace app --verdict DROPPED --since 5m
 kubectl -n app get cnp frontend-deny-dns-by-omission -o yaml
 ```
 
@@ -246,7 +246,7 @@ No resources found
 이후 connectivity test를 다시 실행합니다.
 
 ```bash
-cilium connectivity test
+cilium connectivity test --flow-validation disabled
 ```
 
 ## 실전 운영 체크리스트
