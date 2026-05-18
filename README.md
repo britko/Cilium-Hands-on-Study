@@ -61,7 +61,7 @@ bash scripts/use-local-tools.sh --install-bashrc
 source ~/.bashrc
 ```
 
-Cilium 설치와 검증은 [01. Cilium 설치](docs/01-cilium-install.md)의 Helm, `cilium status`, `hubble status`, `cilium connectivity test` 절차를 따릅니다.
+Cilium 설치와 검증은 [01. Cilium 설치](docs/01-cilium-install.md)의 Helm, `cilium status`, `hubble status`, `cilium connectivity test --flow-validation disabled` 절차를 따릅니다. Hubble flow validation은 [06. kube-proxy Replacement](docs/06-kube-proxy-replacement.md)에서 별도로 검증합니다.
 
 ## 커리큘럼
 
