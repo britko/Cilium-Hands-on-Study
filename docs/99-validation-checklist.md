@@ -4,21 +4,28 @@
 
 ## 1. 기본 클러스터
 
-Windows PowerShell:
-
-```powershell
-.\scripts\create-kind-cluster.ps1
-.\scripts\install-cilium.ps1
-.\scripts\validate.ps1
-```
-
-macOS/Linux Bash:
+Windows WSL2/macOS/Linux Bash:
 
 ```bash
 bash scripts/create-kind-cluster.sh
-bash scripts/install-cilium.sh
-bash scripts/validate.sh
 ```
+
+이후 [01. Cilium 설치](01-cilium-install.md)의 수동 명령으로 Cilium을 설치하고 검증합니다.
+
+```bash
+helm upgrade --install cilium cilium/cilium \
+  --version 1.19.3 \
+  --namespace kube-system \
+  --values labs/01-install/cilium-values.yaml
+cilium hubble enable --ui
+cilium status --wait
+hubble status
+cilium connectivity test
+```
+
+`hubble status`는 별도 터미널에서 `kubectl -n kube-system port-forward svc/hubble-relay 4245:80`를 유지한 상태에서 실행합니다.
+
+기본 kind node image는 `kindest/node:v1.34.0`입니다. 검증 기록에는 실제 사용한 node image도 함께 남깁니다.
 
 통과 기준:
 
@@ -28,18 +35,7 @@ bash scripts/validate.sh
 
 ## 2. eBPF Datapath
 
-Windows PowerShell:
-
-```powershell
-kubectl apply -f labs/02-ebpf-datapath/bookinfo-lite.yaml
-$pod = kubectl -n app get pod -l app=frontend -o jsonpath='{.items[0].metadata.name}'
-kubectl -n app exec $pod -- curl -sS http://api/get
-cilium endpoint list
-cilium identity list
-cilium service list
-```
-
-macOS/Linux Bash:
+Windows WSL2/macOS/Linux Bash:
 
 ```bash
 kubectl apply -f labs/02-ebpf-datapath/bookinfo-lite.yaml
@@ -71,16 +67,7 @@ hubble observe --namespace app --protocol dns --last 5m
 
 ## 4. NetworkPolicy
 
-Windows PowerShell:
-
-```powershell
-kubectl apply -f labs/04-network-policy/default-deny.yaml
-kubectl -n app exec $pod -- curl -m 3 -sS http://api/get
-kubectl apply -f labs/04-network-policy/allow-frontend-to-api.yaml
-kubectl -n app exec $pod -- curl -sS http://api/get
-```
-
-macOS/Linux Bash:
+Windows WSL2/macOS/Linux Bash:
 
 ```bash
 kubectl apply -f labs/04-network-policy/default-deny.yaml
@@ -97,19 +84,7 @@ kubectl -n app exec "$pod" -- curl -sS http://api/get
 
 ## 5. L7 Policy
 
-Windows PowerShell:
-
-```powershell
-kubectl delete -f labs/04-network-policy/default-deny.yaml --ignore-not-found
-kubectl delete -f labs/04-network-policy/allow-frontend-to-api.yaml --ignore-not-found
-kubectl delete -f labs/04-network-policy/cilium-fqdn-egress.yaml --ignore-not-found
-kubectl apply -f labs/05-l7-policy/http-l7-policy.yaml
-kubectl -n app exec $pod -- curl -sS http://api/get
-kubectl -n app exec $pod -- curl -m 5 -X POST -sS http://api/post
-hubble observe --namespace app --protocol http --last 5m
-```
-
-macOS/Linux Bash:
+Windows WSL2/macOS/Linux Bash:
 
 ```bash
 kubectl delete -f labs/04-network-policy/default-deny.yaml --ignore-not-found
@@ -129,23 +104,16 @@ hubble observe --namespace app --protocol http --last 5m
 
 ## 6. kube-proxy Replacement
 
-Windows PowerShell:
-
-```powershell
-.\scripts\create-kind-cluster.ps1 -ClusterName cilium-study-kpr -ConfigPath labs/kind/kind-cilium-kpr.yaml
-kubectl config use-context kind-cilium-study-kpr
-.\scripts\install-cilium.ps1 -ValuesPath labs/01-install/cilium-kpr-values.yaml
-kubectl -n kube-system get ds kube-proxy
-kubectl apply -f labs/06-kube-proxy-replacement/nodeport-demo.yaml
-curl http://127.0.0.1:30080/get
-```
-
-macOS/Linux Bash:
+Windows WSL2/macOS/Linux Bash:
 
 ```bash
 bash scripts/create-kind-cluster.sh --cluster-name cilium-study-kpr --config labs/kind/kind-cilium-kpr.yaml
 kubectl config use-context kind-cilium-study-kpr
-bash scripts/install-cilium.sh --values labs/01-install/cilium-kpr-values.yaml
+helm upgrade --install cilium cilium/cilium \
+  --version 1.19.3 \
+  --namespace kube-system \
+  --values labs/01-install/cilium-kpr-values.yaml
+cilium status --wait
 kubectl -n kube-system get ds kube-proxy
 kubectl apply -f labs/06-kube-proxy-replacement/nodeport-demo.yaml
 curl http://127.0.0.1:30080/get
@@ -176,25 +144,7 @@ kubectl -n gateway-demo get gateway,httproute
 
 ## 8. 실전 운영 패턴
 
-Windows PowerShell:
-
-```powershell
-kubectl config use-context kind-cilium-study
-kubectl apply -f labs/02-ebpf-datapath/bookinfo-lite.yaml
-$pod = kubectl -n app get pod -l app=frontend -o jsonpath='{.items[0].metadata.name}'
-kubectl apply -f labs/09-production-examples/namespace-zero-trust-baseline.yaml
-kubectl -n app exec $pod -- curl -sS http://api/get
-kubectl apply -f labs/09-production-examples/saas-egress-allowlist.yaml
-kubectl -n app exec $pod -- curl -I https://api.github.com
-kubectl -n app exec $pod -- curl -m 5 -I https://example.com
-hubble observe --namespace app --verdict DROPPED --last 5m
-kubectl delete -f labs/09-production-examples/namespace-zero-trust-baseline.yaml --ignore-not-found
-kubectl apply -f labs/09-production-examples/internal-api-l7-guardrail.yaml
-kubectl -n app exec $pod -- curl -sS http://api/get
-kubectl -n app exec $pod -- curl -m 5 -X POST -sS http://api/post
-```
-
-macOS/Linux Bash:
+Windows WSL2/macOS/Linux Bash:
 
 ```bash
 kubectl config use-context kind-cilium-study
@@ -221,24 +171,7 @@ kubectl -n app exec "$pod" -- curl -m 5 -X POST -sS http://api/post
 
 ## 9. Cleanup
 
-Windows PowerShell:
-
-```powershell
-kubectl delete -f labs/09-production-examples/internal-api-l7-guardrail.yaml --ignore-not-found
-kubectl delete -f labs/09-production-examples/saas-egress-allowlist.yaml --ignore-not-found
-kubectl delete -f labs/09-production-examples/namespace-zero-trust-baseline.yaml --ignore-not-found
-kubectl delete -f labs/07-gateway-api/gateway-demo.yaml --ignore-not-found
-kubectl delete -f labs/06-kube-proxy-replacement/nodeport-demo.yaml --ignore-not-found
-kubectl delete -f labs/05-l7-policy/http-l7-policy.yaml --ignore-not-found
-kubectl delete -f labs/04-network-policy/cilium-fqdn-egress.yaml --ignore-not-found
-kubectl delete -f labs/04-network-policy/allow-frontend-to-api.yaml --ignore-not-found
-kubectl delete -f labs/04-network-policy/default-deny.yaml --ignore-not-found
-kubectl delete -f labs/03-hubble/traffic-generator.yaml --ignore-not-found
-kubectl delete -f labs/02-ebpf-datapath/bookinfo-lite.yaml --ignore-not-found
-.\scripts\cleanup.ps1
-```
-
-macOS/Linux Bash:
+Windows WSL2/macOS/Linux Bash:
 
 ```bash
 kubectl delete -f labs/09-production-examples/internal-api-l7-guardrail.yaml --ignore-not-found
@@ -260,8 +193,9 @@ bash scripts/cleanup.sh
 ```text
 Date:
 Host OS:
-Docker Desktop version:
+Container runtime:
 kind version:
+kind node image:
 Kubernetes version:
 Cilium version:
 Cilium CLI version:
