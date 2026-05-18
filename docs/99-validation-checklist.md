@@ -20,10 +20,11 @@ helm upgrade --install cilium cilium/cilium \
 cilium hubble enable --ui
 cilium status --wait
 hubble status
-cilium connectivity test
+cilium connectivity test --flow-validation disabled
 ```
 
 `hubble status`는 별도 터미널에서 `kubectl -n kube-system port-forward svc/hubble-relay 4245:80`를 유지한 상태에서 실행합니다.
+기본 클러스터는 `kubeProxyReplacement=false`이므로 Hubble flow validation은 [06. kube-proxy Replacement](06-kube-proxy-replacement.md)에서 별도로 검증합니다.
 
 기본 kind node image는 `kindest/node:v1.34.0`입니다. 검증 기록에는 실제 사용한 node image도 함께 남깁니다.
 
@@ -31,7 +32,7 @@ cilium connectivity test
 
 - `cilium status --wait` 성공
 - `hubble status` 성공
-- `cilium connectivity test` 성공
+- `cilium connectivity test --flow-validation disabled` 성공
 
 ## 2. eBPF Datapath
 
@@ -41,23 +42,26 @@ Windows WSL2/macOS/Linux Bash:
 kubectl apply -f labs/02-ebpf-datapath/bookinfo-lite.yaml
 pod="$(kubectl -n app get pod -l app=frontend -o jsonpath='{.items[0].metadata.name}')"
 kubectl -n app exec "$pod" -- curl -sS http://api/get
-cilium endpoint list
-cilium identity list
-cilium service list
+kubectl -n kube-system exec ds/cilium -- cilium-dbg endpoint list
+kubectl -n kube-system exec ds/cilium -- cilium-dbg identity list
+kubectl -n kube-system exec ds/cilium -- cilium-dbg service list
 ```
 
 통과 기준:
 
 - `frontend`에서 `api` 호출 성공
 - `app=frontend`, `app=api` endpoint가 Cilium에 표시됨
-- `api` Service가 Cilium service list에 표시됨
+- `api` Service가 `cilium-dbg service list`에 표시됨
 
 ## 3. Hubble
 
 ```bash
+kubectl apply -f labs/03-hubble/l7-visibility.yaml
 kubectl apply -f labs/03-hubble/traffic-generator.yaml
-hubble observe --namespace app --protocol http --last 5m
-hubble observe --namespace app --protocol dns --last 5m
+pod="$(kubectl -n app get pod -l app=frontend -o jsonpath='{.items[0].metadata.name}')"
+kubectl -n app exec "$pod" -- sh -c 'curl -sS http://api/get >/dev/null && nslookup kubernetes.default.svc.cluster.local >/dev/null'
+hubble observe --namespace app --protocol http --since 5m
+hubble observe --namespace app --protocol dns --since 5m
 ```
 
 통과 기준:
@@ -93,7 +97,7 @@ kubectl delete -f labs/04-network-policy/cilium-fqdn-egress.yaml --ignore-not-fo
 kubectl apply -f labs/05-l7-policy/http-l7-policy.yaml
 kubectl -n app exec "$pod" -- curl -sS http://api/get
 kubectl -n app exec "$pod" -- curl -m 5 -X POST -sS http://api/post
-hubble observe --namespace app --protocol http --last 5m
+hubble observe --namespace app --protocol http --since 5m
 ```
 
 통과 기준:
@@ -117,6 +121,8 @@ cilium status --wait
 kubectl -n kube-system get ds kube-proxy
 kubectl apply -f labs/06-kube-proxy-replacement/nodeport-demo.yaml
 curl http://127.0.0.1:30080/get
+hubble status
+cilium connectivity test --flow-validation strict
 ```
 
 통과 기준:
@@ -124,6 +130,7 @@ curl http://127.0.0.1:30080/get
 - kube-proxy DaemonSet이 없음
 - Cilium이 Ready
 - NodePort 호출 성공
+- `cilium connectivity test --flow-validation strict` 성공
 
 ## 7. Gateway API
 
@@ -155,7 +162,7 @@ kubectl -n app exec "$pod" -- curl -sS http://api/get
 kubectl apply -f labs/09-production-examples/saas-egress-allowlist.yaml
 kubectl -n app exec "$pod" -- curl -I https://api.github.com
 kubectl -n app exec "$pod" -- curl -m 5 -I https://example.com
-hubble observe --namespace app --verdict DROPPED --last 5m
+hubble observe --namespace app --verdict DROPPED --since 5m
 kubectl delete -f labs/09-production-examples/namespace-zero-trust-baseline.yaml --ignore-not-found
 kubectl apply -f labs/09-production-examples/internal-api-l7-guardrail.yaml
 kubectl -n app exec "$pod" -- curl -sS http://api/get
