@@ -1,4 +1,4 @@
-# 08. 트러블슈팅
+# 09. 트러블슈팅
 
 ## 학습 목표
 
@@ -32,7 +32,7 @@ cilium sysdump --output-filename cilium-sysdump.zip
 
 ```bash
 kubectl apply -f labs/02-ebpf-datapath/bookinfo-lite.yaml
-kubectl apply -f labs/08-troubleshooting/broken-service-selector.yaml
+kubectl apply -f labs/09-troubleshooting/broken-service-selector.yaml
 ```
 
 호출합니다.
@@ -71,7 +71,7 @@ DNS 허용 없이 API Pod만 허용하는 정책을 적용합니다.
 Windows WSL2/macOS/Linux Bash:
 
 ```bash
-kubectl apply -f labs/08-troubleshooting/deny-dns-egress.yaml
+kubectl apply -f labs/09-troubleshooting/deny-dns-egress.yaml
 kubectl -n app exec "$pod" -- curl -m 5 -sS http://api/get
 ```
 
@@ -91,7 +91,7 @@ kubectl -n app get cnp frontend-deny-dns-by-omission -o yaml
 복구:
 
 ```bash
-kubectl delete -f labs/08-troubleshooting/deny-dns-egress.yaml
+kubectl delete -f labs/09-troubleshooting/deny-dns-egress.yaml
 kubectl apply -f labs/04-network-policy/cilium-fqdn-egress.yaml
 ```
 
@@ -259,7 +259,7 @@ cilium connectivity test --flow-validation disabled
 ## 정리
 
 ```bash
-kubectl delete -f labs/08-troubleshooting/deny-dns-egress.yaml --ignore-not-found
-kubectl delete -f labs/08-troubleshooting/broken-service-selector.yaml --ignore-not-found
+kubectl delete -f labs/09-troubleshooting/deny-dns-egress.yaml --ignore-not-found
+kubectl delete -f labs/09-troubleshooting/broken-service-selector.yaml --ignore-not-found
 kubectl delete -f labs/04-network-policy/cilium-fqdn-egress.yaml --ignore-not-found
 ```

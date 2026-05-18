@@ -1,4 +1,4 @@
-# 09. 실전 운영 패턴
+# 10. 실전 운영 패턴
 
 이 장은 앞선 랩에서 익힌 기능을 실제 서비스 운영 기준으로 조합하는 예시입니다. 목표는 Cilium을 "설치해 봤다"에서 끝내지 않고, 신규 서비스 온보딩, 외부 API 통제, 내부 API 최소 권한, 장애 분석 루틴에 바로 적용할 수 있는 기준을 만드는 것입니다.
 
@@ -20,7 +20,7 @@ pod="$(kubectl -n app get pod -l app=frontend -o jsonpath='{.items[0].metadata.n
 Windows WSL2/macOS/Linux Bash:
 
 ```bash
-kubectl apply -f labs/09-production-examples/namespace-zero-trust-baseline.yaml
+kubectl apply -f labs/10-production-examples/namespace-zero-trust-baseline.yaml
 kubectl -n app exec "$pod" -- curl -sS http://api/get
 ```
 
@@ -45,7 +45,7 @@ hubble observe --namespace app --verdict DROPPED --since 5m
 Windows WSL2/macOS/Linux Bash:
 
 ```bash
-kubectl apply -f labs/09-production-examples/saas-egress-allowlist.yaml
+kubectl apply -f labs/10-production-examples/saas-egress-allowlist.yaml
 kubectl -n app exec "$pod" -- curl -I https://api.github.com
 kubectl -n app exec "$pod" -- curl -m 5 -I https://example.com
 ```
@@ -70,8 +70,8 @@ hubble observe --namespace app --to-fqdn api.github.com --since 10m
 Windows WSL2/macOS/Linux Bash:
 
 ```bash
-kubectl delete -f labs/09-production-examples/namespace-zero-trust-baseline.yaml --ignore-not-found
-kubectl apply -f labs/09-production-examples/internal-api-l7-guardrail.yaml
+kubectl delete -f labs/10-production-examples/namespace-zero-trust-baseline.yaml --ignore-not-found
+kubectl apply -f labs/10-production-examples/internal-api-l7-guardrail.yaml
 kubectl -n app exec "$pod" -- curl -sS http://api/get
 kubectl -n app exec "$pod" -- curl -m 5 -X POST -sS http://api/post
 ```
@@ -121,7 +121,7 @@ hubble observe --namespace app --protocol http --since 10m
 ## 정리
 
 ```bash
-kubectl delete -f labs/09-production-examples/internal-api-l7-guardrail.yaml --ignore-not-found
-kubectl delete -f labs/09-production-examples/saas-egress-allowlist.yaml --ignore-not-found
-kubectl delete -f labs/09-production-examples/namespace-zero-trust-baseline.yaml --ignore-not-found
+kubectl delete -f labs/10-production-examples/internal-api-l7-guardrail.yaml --ignore-not-found
+kubectl delete -f labs/10-production-examples/saas-egress-allowlist.yaml --ignore-not-found
+kubectl delete -f labs/10-production-examples/namespace-zero-trust-baseline.yaml --ignore-not-found
 ```

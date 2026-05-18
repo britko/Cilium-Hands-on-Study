@@ -55,23 +55,28 @@ kubectl apply -f labs/07-gateway-api/gateway-demo.yaml
 kubectl -n gateway-demo get gateway,httproute,svc,pod
 ```
 
-kind에는 기본 LoadBalancer 구현이 없으므로 Gateway Service에 port-forward로 접근합니다.
+kind에는 기본 LoadBalancer 구현이 없습니다. 또한 Cilium Gateway가 생성하는 Service는 일반 Service selector가 없으므로 `kubectl port-forward service/...` 대상이 될 수 없습니다. 이 실습은 Gateway Service를 `NodePort`로 만들고 kind 노드 컨테이너 안에서 호출합니다.
 
 Windows WSL2/macOS/Linux Bash:
 
 ```bash
+kubectl -n gateway-demo rollout status deploy/web --timeout=120s
+
 svc="$(kubectl -n gateway-demo get svc -l io.cilium.gateway/owning-gateway=cilium-gateway -o jsonpath='{.items[0].metadata.name}')"
-kubectl -n gateway-demo port-forward "service/$svc" 8081:80
+node_port="$(kubectl -n gateway-demo get svc "$svc" -o jsonpath='{.spec.ports[0].nodePort}')"
+node="$(kubectl get node -o jsonpath='{.items[0].metadata.name}')"
 ```
 
-다른 터미널에서 호출합니다.
+Gateway를 호출합니다.
 
 ```bash
-curl http://127.0.0.1:8081/get
-curl -i http://127.0.0.1:8081/status/404
+docker exec "$node" curl -sS "http://127.0.0.1:${node_port}/get"
+docker exec "$node" curl -i "http://127.0.0.1:${node_port}/status/404"
 ```
 
 `/get`은 라우팅되고 `/status/404`는 HTTPRoute match에 없으므로 기대한 응답이 아닐 수 있습니다.
+
+`Gateway`의 `Programmed` 상태가 `AddressNotAssigned`로 남아 있어도 NodePort 호출이 성공하면 이 실습의 라우팅 검증은 통과입니다. LoadBalancer 주소까지 검증하는 흐름은 [08. LoadBalancer IPAM과 L2 Announcement](08-loadbalancer-ipam-l2.md)에서 별도로 다룹니다.
 
 ## 실전 운영 관점
 
@@ -96,6 +101,7 @@ kubectl get crd | grep gateway.networking.k8s.io
 kubectl get gatewayclass
 kubectl -n gateway-demo describe gateway cilium-gateway
 kubectl -n gateway-demo describe httproute web
+kubectl -n gateway-demo get svc -l io.cilium.gateway/owning-gateway=cilium-gateway -o wide
 kubectl -n kube-system logs deploy/cilium-operator --tail=200
 ```
 
