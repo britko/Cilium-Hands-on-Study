@@ -8,10 +8,13 @@ networking:
   serviceSubnet: 10.21.0.0/16
 nodes:
   - role: control-plane
+    image: kindest/node:v1.34.0@sha256:7416a61b42b1662ca6ca89f02028ac133a309a2a30ba309614e8ec94d976dc5a
     extraPortMappings:
       - containerPort: 30080
         hostPort: 30080
         listenAddress: 127.0.0.1
         protocol: TCP
   - role: worker
+    image: kindest/node:v1.34.0@sha256:7416a61b42b1662ca6ca89f02028ac133a309a2a30ba309614e8ec94d976dc5a
   - role: worker
+    image: kindest/node:v1.34.0@sha256:7416a61b42b1662ca6ca89f02028ac133a309a2a30ba309614e8ec94d976dc5a
