@@ -19,43 +19,51 @@
 
 ## 권장 환경
 
-- Windows 10/11 + PowerShell 7 이상
-- macOS 또는 Linux + Bash
-- Docker Desktop, Docker Engine, Colima, Rancher Desktop 등 kind를 구동할 수 있는 컨테이너 런타임
-- `kind`, `kubectl`, `helm`, `cilium`, `hubble`
-- Kubernetes in Docker cluster
+- Windows 10/11 + WSL2 Ubuntu + Docker Engine
+- macOS + Colima + Docker CLI
+- Linux + Docker Engine
+- kind 로컬 Kubernetes 클러스터
+
+지원 수준은 다음을 기준으로 합니다.
+
+- Tier 1: Windows WSL2 Docker Engine, macOS Colima, Linux Docker Engine
+- Tier 2: Docker Desktop 또는 Rancher Desktop의 Docker 호환 backend
+
+처음 시작할 때는 OS별 문서로 바로 이동합니다.
+
+- [Windows WSL2](docs/00-environment-windows-wsl2.md)
+- [macOS](docs/00-environment-macos.md)
+- [Linux](docs/00-environment-linux.md)
 
 기본 실습은 Cilium `1.19.x` 안정 버전을 기준으로 작성했습니다. Gateway API 실습은 Cilium `1.19.x` 안정 문서 기준인 Gateway API CRD `v1.4.1`을 사용합니다.
 
 ## 빠른 시작
 
-Windows PowerShell:
+Windows 권장 경로는 WSL2 Ubuntu 안에서 Bash 스크립트와 문서를 함께 사용하는 방식입니다. macOS와 Linux도 같은 흐름입니다.
 
-```powershell
-.\scripts\create-kind-cluster.ps1
-.\scripts\install-cilium.ps1
-.\scripts\validate.ps1
-```
-
-macOS/Linux Bash:
+1. OS별 환경 준비 문서([Windows WSL2](docs/00-environment-windows-wsl2.md), [macOS](docs/00-environment-macos.md), [Linux](docs/00-environment-linux.md))에서 Docker와 kind 클러스터를 준비합니다.
+2. [01. Cilium 설치](docs/01-cilium-install.md)부터는 Helm과 Cilium CLI 명령을 직접 실행하면서 진행합니다.
 
 ```bash
 bash scripts/create-kind-cluster.sh
-bash scripts/install-cilium.sh
-bash scripts/validate.sh
 ```
 
-설치가 끝나면 다음 명령으로 기본 상태를 확인합니다.
+Windows host PowerShell 실행은 지원 경로에서 제외합니다. Windows 사용자는 WSL2 Ubuntu 안에서 Bash 스크립트를 실행합니다.
 
-```powershell
-cilium status --wait
-cilium connectivity test
-hubble status
+`create-kind-cluster` 스크립트는 `kind`, `kubectl` CLI가 없으면 프로젝트 로컬 `tools/bin`에 자동 설치합니다. Cilium 설치 이후 단계는 문서의 수동 명령으로 학습합니다.
+
+새 터미널에서 `kubectl` alias와 completion을 쓰려면 `~/.bashrc` 또는 `~/.zshrc`에 로컬 도구 설정을 추가합니다.
+
+```bash
+bash scripts/use-local-tools.sh --install-bashrc
+source ~/.bashrc
 ```
+
+Cilium 설치와 검증은 [01. Cilium 설치](docs/01-cilium-install.md)의 Helm, `cilium status`, `hubble status`, `cilium connectivity test` 절차를 따릅니다.
 
 ## 커리큘럼
 
-1. [환경 준비](docs/00-environment.md)
+1. 환경 준비: [Windows WSL2](docs/00-environment-windows-wsl2.md), [macOS](docs/00-environment-macos.md), [Linux](docs/00-environment-linux.md)
 2. [Cilium 설치](docs/01-cilium-install.md)
 3. [eBPF datapath 관찰](docs/02-ebpf-datapath.md)
 4. [Hubble observability](docs/03-hubble-observability.md)
@@ -96,19 +104,12 @@ hubble status
 │   ├── 08-troubleshooting/
 │   └── 09-production-examples/
 └── scripts/
-    ├── *.ps1
     └── *.sh
 ```
 
 ## 정리
 
-Windows PowerShell:
-
-```powershell
-.\scripts\cleanup.ps1
-```
-
-macOS/Linux Bash:
+Windows WSL2/macOS/Linux Bash:
 
 ```bash
 bash scripts/cleanup.sh
