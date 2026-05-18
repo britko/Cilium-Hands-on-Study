@@ -34,8 +34,8 @@ kubectl -n app exec "$pod" -- curl -sS http://api/get
 검증:
 
 ```bash
-hubble observe --namespace app --last 5m
-hubble observe --namespace app --verdict DROPPED --last 5m
+hubble observe --namespace app --since 5m
+hubble observe --namespace app --verdict DROPPED --since 5m
 ```
 
 ## 패턴 2: 외부 SaaS Egress Allowlist
@@ -59,8 +59,8 @@ kubectl -n app exec "$pod" -- curl -m 5 -I https://example.com
 관찰:
 
 ```bash
-hubble observe --namespace app --protocol dns --last 10m
-hubble observe --namespace app --to-fqdn api.github.com --last 10m
+hubble observe --namespace app --protocol dns --since 10m
+hubble observe --namespace app --to-fqdn api.github.com --since 10m
 ```
 
 ## 패턴 3: 내부 API L7 최소 권한
@@ -96,9 +96,9 @@ kubectl -n app exec "$pod" -- curl -m 5 -X POST -sS http://api/post
 cilium status
 kubectl -n app get pods -o wide
 kubectl -n app get networkpolicy,ciliumnetworkpolicy
-hubble observe --namespace app --last 10m
-hubble observe --namespace app --verdict DROPPED --last 10m
-hubble observe --namespace app --protocol http --last 10m
+hubble observe --namespace app --since 10m
+hubble observe --namespace app --verdict DROPPED --since 10m
+hubble observe --namespace app --protocol http --since 10m
 ```
 
 판단 기준:
