@@ -73,10 +73,33 @@ curl http://127.0.0.1:30080/get
 Cilium service map을 확인합니다.
 
 ```bash
-cilium service list
+kubectl -n kube-system exec ds/cilium -- cilium-dbg service list
 kubectl -n kpr-demo get svc echo-nodeport -o wide
 kubectl -n kpr-demo get endpointslice -l kubernetes.io/service-name=echo-nodeport
 ```
+
+## Hubble flow validation 검증
+
+기본 클러스터에서는 kube-proxy가 Service 처리를 담당하므로 `cilium connectivity test`의 Hubble flow validation이 Service IP 대신 backend Pod IP flow를 보고 실패할 수 있습니다. kube-proxy replacement 클러스터에서는 Cilium이 Service load balancing을 담당하므로 flow validation까지 엄격하게 확인합니다.
+
+별도 터미널에서 Hubble Relay port-forward를 유지합니다.
+
+```bash
+kubectl -n kube-system port-forward svc/hubble-relay 4245:80
+```
+
+다른 터미널에서 실행합니다.
+
+```bash
+hubble status
+cilium connectivity test --flow-validation strict
+```
+
+통과 기준:
+
+- `hubble status`에서 `Connected Nodes`가 전체 노드 수와 같아야 합니다.
+- `pod-to-service` 시나리오에서 Service IP 기준 flow validation이 통과해야 합니다.
+- 실패 시 `--print-flows` 또는 `--all-flows`를 붙여 Hubble이 기대한 Service IP flow와 실제 backend Pod IP flow 중 무엇을 보고 있는지 확인합니다.
 
 ## 실전 운영 관점
 
