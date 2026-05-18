@@ -55,8 +55,8 @@ kubectl -n app exec "$pod" -- curl -m 5 -X POST -sS http://api/post
 ## Hubble 확인
 
 ```bash
-hubble observe --namespace app --protocol http --last 5m
-hubble observe --namespace app --verdict DROPPED --last 5m
+hubble observe --namespace app --protocol http --since 5m
+hubble observe --namespace app --verdict DROPPED --since 5m
 ```
 
 관찰 포인트:
