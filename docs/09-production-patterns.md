@@ -4,14 +4,7 @@
 
 ## 적용 전제
 
-Windows PowerShell:
-
-```powershell
-kubectl apply -f labs/02-ebpf-datapath/bookinfo-lite.yaml
-$pod = kubectl -n app get pod -l app=frontend -o jsonpath='{.items[0].metadata.name}'
-```
-
-macOS/Linux Bash:
+Windows WSL2/macOS/Linux Bash:
 
 ```bash
 kubectl apply -f labs/02-ebpf-datapath/bookinfo-lite.yaml
@@ -24,14 +17,7 @@ pod="$(kubectl -n app get pod -l app=frontend -o jsonpath='{.items[0].metadata.n
 
 신규 namespace는 기본적으로 모든 ingress/egress를 차단하고, 필요한 통신만 허용합니다.
 
-Windows PowerShell:
-
-```powershell
-kubectl apply -f labs/09-production-examples/namespace-zero-trust-baseline.yaml
-kubectl -n app exec $pod -- curl -sS http://api/get
-```
-
-macOS/Linux Bash:
+Windows WSL2/macOS/Linux Bash:
 
 ```bash
 kubectl apply -f labs/09-production-examples/namespace-zero-trust-baseline.yaml
@@ -56,15 +42,7 @@ hubble observe --namespace app --verdict DROPPED --last 5m
 
 업무 서비스가 GitHub, 결제사, 메일 발송 API 같은 외부 SaaS를 호출할 때는 전체 인터넷 egress를 열지 않고 FQDN allowlist로 제한합니다.
 
-Windows PowerShell:
-
-```powershell
-kubectl apply -f labs/09-production-examples/saas-egress-allowlist.yaml
-kubectl -n app exec $pod -- curl -I https://api.github.com
-kubectl -n app exec $pod -- curl -m 5 -I https://example.com
-```
-
-macOS/Linux Bash:
+Windows WSL2/macOS/Linux Bash:
 
 ```bash
 kubectl apply -f labs/09-production-examples/saas-egress-allowlist.yaml
@@ -89,16 +67,7 @@ hubble observe --namespace app --to-fqdn api.github.com --last 10m
 
 같은 API Service라도 호출자별로 허용 method/path를 다르게 제한할 수 있습니다.
 
-Windows PowerShell:
-
-```powershell
-kubectl delete -f labs/09-production-examples/namespace-zero-trust-baseline.yaml --ignore-not-found
-kubectl apply -f labs/09-production-examples/internal-api-l7-guardrail.yaml
-kubectl -n app exec $pod -- curl -sS http://api/get
-kubectl -n app exec $pod -- curl -m 5 -X POST -sS http://api/post
-```
-
-macOS/Linux Bash:
+Windows WSL2/macOS/Linux Bash:
 
 ```bash
 kubectl delete -f labs/09-production-examples/namespace-zero-trust-baseline.yaml --ignore-not-found
