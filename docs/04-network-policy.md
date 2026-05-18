@@ -35,7 +35,7 @@ kubectl -n app exec "$pod" -- curl -m 3 -sS http://api/get
 Hubble로 차단을 확인합니다.
 
 ```bash
-hubble observe --namespace app --verdict DROPPED --last 5m
+hubble observe --namespace app --verdict DROPPED --since 5m
 ```
 
 ## 필요한 통신만 허용
