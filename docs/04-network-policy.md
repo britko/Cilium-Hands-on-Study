@@ -14,14 +14,7 @@ kubectl apply -f labs/02-ebpf-datapath/bookinfo-lite.yaml
 
 기본 통신을 확인합니다.
 
-Windows PowerShell:
-
-```powershell
-$pod = kubectl -n app get pod -l app=frontend -o jsonpath='{.items[0].metadata.name}'
-kubectl -n app exec $pod -- curl -sS http://api/get
-```
-
-macOS/Linux Bash:
+Windows WSL2/macOS/Linux Bash:
 
 ```bash
 pod="$(kubectl -n app get pod -l app=frontend -o jsonpath='{.items[0].metadata.name}')"
@@ -30,14 +23,7 @@ kubectl -n app exec "$pod" -- curl -sS http://api/get
 
 ## 기본 deny 적용
 
-Windows PowerShell:
-
-```powershell
-kubectl apply -f labs/04-network-policy/default-deny.yaml
-kubectl -n app exec $pod -- curl -m 3 -sS http://api/get
-```
-
-macOS/Linux Bash:
+Windows WSL2/macOS/Linux Bash:
 
 ```bash
 kubectl apply -f labs/04-network-policy/default-deny.yaml
@@ -54,14 +40,7 @@ hubble observe --namespace app --verdict DROPPED --last 5m
 
 ## 필요한 통신만 허용
 
-Windows PowerShell:
-
-```powershell
-kubectl apply -f labs/04-network-policy/allow-frontend-to-api.yaml
-kubectl -n app exec $pod -- curl -sS http://api/get
-```
-
-macOS/Linux Bash:
+Windows WSL2/macOS/Linux Bash:
 
 ```bash
 kubectl apply -f labs/04-network-policy/allow-frontend-to-api.yaml
@@ -74,15 +53,7 @@ kubectl -n app exec "$pod" -- curl -sS http://api/get
 
 외부 SaaS 접근을 `api.github.com`으로 제한하는 예시입니다.
 
-Windows PowerShell:
-
-```powershell
-kubectl apply -f labs/04-network-policy/cilium-fqdn-egress.yaml
-kubectl -n app exec $pod -- curl -I https://api.github.com
-kubectl -n app exec $pod -- curl -m 5 -I https://example.com
-```
-
-macOS/Linux Bash:
+Windows WSL2/macOS/Linux Bash:
 
 ```bash
 kubectl apply -f labs/04-network-policy/cilium-fqdn-egress.yaml
