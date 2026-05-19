@@ -45,6 +45,8 @@ kubectl -n app exec "$pod" -- curl -sS http://api/get
 kubectl -n kube-system exec ds/cilium -- cilium-dbg endpoint list
 kubectl -n kube-system exec ds/cilium -- cilium-dbg identity list
 kubectl -n kube-system exec ds/cilium -- cilium-dbg service list
+kubectl -n kube-system exec ds/cilium -- cilium-dbg bpf lb list
+kubectl -n kube-system exec ds/cilium -- cilium-dbg bpf ipcache list
 ```
 
 통과 기준:
@@ -52,6 +54,8 @@ kubectl -n kube-system exec ds/cilium -- cilium-dbg service list
 - `frontend`에서 `api` 호출 성공
 - `app=frontend`, `app=api` endpoint가 Cilium에 표시됨
 - `api` Service가 `cilium-dbg service list`에 표시됨
+- `bpf lb list`에서 `api` Service frontend/backend mapping 확인 가능
+- `bpf ipcache list`에서 app Pod IP와 identity mapping 확인 가능
 
 ## 3. Hubble
 
