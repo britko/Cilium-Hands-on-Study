@@ -37,7 +37,7 @@ kubectl apply -f labs/09-troubleshooting/broken-service-selector.yaml
 
 호출합니다.
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 pod="$(kubectl -n app get pod -l app=frontend -o jsonpath='{.items[0].metadata.name}')"
@@ -68,7 +68,7 @@ kubectl -n app get endpointslice -l kubernetes.io/service-name=api-broken
 
 DNS 허용 없이 API Pod만 허용하는 정책을 적용합니다.
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 kubectl apply -f labs/09-troubleshooting/deny-dns-egress.yaml

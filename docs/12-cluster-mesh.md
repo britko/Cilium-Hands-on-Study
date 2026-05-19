@@ -10,7 +10,7 @@
 
 Cluster Mesh는 클러스터별 PodCIDR와 ServiceCIDR가 겹치면 안 됩니다. 이 장은 `east`, `west` 두 클러스터를 별도로 만듭니다.
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 bash scripts/create-kind-cluster.sh --cluster-name cilium-east --config labs/kind/kind-cilium-clustermesh-east.yaml

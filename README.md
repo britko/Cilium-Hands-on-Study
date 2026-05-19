@@ -20,19 +20,17 @@ Kubernetes 네트워킹 기본기를 갖춘 사용자를 위한 Cilium basic-to-
 
 ## 권장 환경
 
-- Windows 10/11 + WSL2 Ubuntu + Docker Engine
 - macOS + Colima + Docker CLI
 - Linux + Docker Engine
 - kind 로컬 Kubernetes 클러스터
 
 지원 수준은 다음을 기준으로 합니다.
 
-- Tier 1: Windows WSL2 Docker Engine, macOS Colima, Linux Docker Engine
-- Tier 2: Docker Desktop 또는 Rancher Desktop의 Docker 호환 backend
+- Tier 1: Linux Docker Engine, macOS Colima
+- Tier 2: Docker 호환 backend
 
 처음 시작할 때는 OS별 문서로 바로 이동합니다.
 
-- [Windows WSL2](docs/00-environment-windows-wsl2.md)
 - [macOS](docs/00-environment-macos.md)
 - [Linux](docs/00-environment-linux.md)
 
@@ -40,9 +38,9 @@ Kubernetes 네트워킹 기본기를 갖춘 사용자를 위한 Cilium basic-to-
 
 ## 빠른 시작
 
-Windows 권장 경로는 WSL2 Ubuntu 안에서 Bash 스크립트와 문서를 함께 사용하는 방식입니다. macOS와 Linux도 같은 흐름입니다.
+macOS와 Linux에서 Bash 스크립트와 문서를 함께 사용하는 흐름입니다.
 
-1. OS별 환경 준비 문서([Windows WSL2](docs/00-environment-windows-wsl2.md), [macOS](docs/00-environment-macos.md), [Linux](docs/00-environment-linux.md))에서 Docker, kind 클러스터, CLI 도구를 준비합니다.
+1. OS별 환경 준비 문서([macOS](docs/00-environment-macos.md), [Linux](docs/00-environment-linux.md))에서 Docker, kind 클러스터, CLI 도구를 준비합니다.
 2. [01. Cilium 설치](docs/01-cilium-install.md)부터는 Helm으로 Cilium을 설치하고 검증합니다.
 
 ```bash
@@ -51,9 +49,7 @@ bash scripts/install-cilium-tools.sh
 source scripts/use-local-tools.sh
 ```
 
-Windows host PowerShell 실행은 지원 경로에서 제외합니다. Windows 사용자는 WSL2 Ubuntu 안에서 Bash 스크립트를 실행합니다.
-
-`create-kind-cluster` 스크립트는 `kind`, `kubectl` CLI가 없으면 프로젝트 로컬 `tools/bin`에 자동 설치합니다. `install-cilium-tools` 스크립트는 `cilium`, `hubble` CLI를 같은 경로에 설치합니다. Cilium 설치 이후 단계는 문서의 수동 명령으로 학습합니다.
+`create-kind-cluster` 스크립트는 `kind`, `kubectl` CLI가 없으면 프로젝트 로컬 `tools/bin`에 자동 설치합니다. Linux에서는 Docker Engine도 없으면 자동 설치를 시도합니다. `install-cilium-tools` 스크립트는 `cilium`, `hubble` CLI를 같은 경로에 설치합니다. Cilium 설치 이후 단계는 문서의 수동 명령으로 학습합니다.
 
 새 터미널에서 `kubectl` alias와 completion을 쓰려면 OS별 환경 준비 문서에 따라 셸 설정 파일에 로컬 도구 설정을 추가합니다. Bash 예시는 다음과 같습니다.
 
@@ -66,7 +62,7 @@ Cilium 설치와 검증은 [01. Cilium 설치](docs/01-cilium-install.md)의 Hel
 
 ## 커리큘럼
 
-- `00` 환경 준비: [Windows WSL2](docs/00-environment-windows-wsl2.md), [macOS](docs/00-environment-macos.md), [Linux](docs/00-environment-linux.md)
+- `00` 환경 준비: [macOS](docs/00-environment-macos.md), [Linux](docs/00-environment-linux.md)
 - `01` [Cilium 설치](docs/01-cilium-install.md)
 - `02` [eBPF datapath 관찰](docs/02-ebpf-datapath.md)
 - `03` [Hubble observability](docs/03-hubble-observability.md)
@@ -137,7 +133,7 @@ Cilium 설치와 검증은 [01. Cilium 설치](docs/01-cilium-install.md)의 Hel
 
 ## 정리
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 bash scripts/cleanup.sh

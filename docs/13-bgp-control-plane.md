@@ -10,7 +10,7 @@
 
 이 장은 kube-proxy replacement와 Cilium LoadBalancer IPAM을 사용하는 별도 kind 클러스터를 권장합니다.
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 bash scripts/create-kind-cluster.sh --cluster-name cilium-bgp --config labs/kind/kind-cilium-bgp.yaml
@@ -39,7 +39,7 @@ client subnet -> router/FRR -> Cilium node -> Service backend Pod
 3. LoadBalancer Service에 VIP를 할당합니다.
 4. FRR routing table과 Cilium BGP status에서 경로 광고를 확인합니다.
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 docker compose -f labs/13-bgp-control-plane/frr/docker-compose.yaml up -d

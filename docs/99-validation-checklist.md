@@ -4,7 +4,7 @@
 
 ## 1. 기본 클러스터
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 bash scripts/create-kind-cluster.sh
@@ -36,7 +36,7 @@ cilium connectivity test --flow-validation disabled
 
 ## 2. eBPF Datapath
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 kubectl apply -f labs/02-ebpf-datapath/bookinfo-lite.yaml
@@ -71,7 +71,7 @@ hubble observe --namespace app --protocol dns --since 5m
 
 ## 4. NetworkPolicy
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 kubectl apply -f labs/04-network-policy/default-deny.yaml
@@ -88,7 +88,7 @@ kubectl -n app exec "$pod" -- curl -sS http://api/get
 
 ## 5. L7 Policy
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 kubectl delete -f labs/04-network-policy/default-deny.yaml --ignore-not-found
@@ -108,7 +108,7 @@ hubble observe --namespace app --protocol http --since 5m
 
 ## 6. kube-proxy Replacement
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 bash scripts/create-kind-cluster.sh --cluster-name cilium-study-kpr --config labs/kind/kind-cilium-kpr.yaml
@@ -178,7 +178,7 @@ docker exec "$node" curl -sS "http://${vip}/get"
 
 ## 9. 트러블슈팅
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 kubectl config use-context kind-cilium-study
@@ -199,7 +199,7 @@ kubectl -n app get endpointslice -l kubernetes.io/service-name=api-broken
 
 ## 10. 실전 운영 패턴
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 kubectl config use-context kind-cilium-study
@@ -292,7 +292,7 @@ kubectl apply --dry-run=client -f labs/19-policy-host-firewall/service-exception
 
 ## 22. Cleanup
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 kubectl delete -f labs/19-policy-host-firewall/service-exception.yaml --ignore-not-found

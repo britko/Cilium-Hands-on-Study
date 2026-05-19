@@ -44,7 +44,7 @@ kubectl -n kube-system logs deploy/hubble-relay --tail=100
 
 `hubble observe`는 Hubble buffer에 이미 들어온 flow 중 필터에 맞는 것만 출력합니다. 아무 출력이 없으면 먼저 트래픽을 직접 발생시킵니다.
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 pod="$(kubectl -n app get pod -l app=frontend -o jsonpath='{.items[0].metadata.name}')"

@@ -10,7 +10,7 @@
 
 Egress Gateway는 kind에서 개념 검증은 가능하지만, 실제 source IP 고정 효과는 VM/bare metal 또는 cloud VM 환경에서 더 명확합니다. 이 장은 kind 명령과 선택 VM 검증을 나눠 설명합니다.
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 bash scripts/create-kind-cluster.sh --cluster-name cilium-egress --config labs/kind/kind-cilium-egress.yaml

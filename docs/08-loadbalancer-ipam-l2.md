@@ -13,7 +13,7 @@
 
 L2 Announcement는 kube-proxy replacement가 필요합니다. 또한 Cilium agent가 Kubernetes `Lease`를 사용하므로 Helm chart로 기능을 켜는 방식을 사용합니다.
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 kubectl config use-context kind-cilium-study-kpr
@@ -98,7 +98,7 @@ docker network inspect kind --format '{{range .IPAM.Config}}{{println .Subnet}}{
 
 07장의 NodePort Gateway와 충돌하지 않도록 별도 GatewayClass와 Gateway를 만듭니다. backend `web` Service는 그대로 재사용합니다.
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 kubectl apply -f labs/07-gateway-api/gateway-demo.yaml
@@ -114,7 +114,7 @@ kubectl -n gateway-demo get gateway,httproute,svc -o wide
 
 ## VIP 호출
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 lb_svc="$(kubectl -n gateway-demo get svc -l io.cilium.gateway/owning-gateway=cilium-gateway-lb -o jsonpath='{.items[0].metadata.name}')"
@@ -147,7 +147,7 @@ kubectl -n kube-system exec "$agent" -- cilium-dbg shell -- db/show l2-announce
 
 ## 실패 시 확인
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 kubectl -n kube-system get configmap cilium-config -o jsonpath='{.data.enable-l2-announcements}{"\n"}'

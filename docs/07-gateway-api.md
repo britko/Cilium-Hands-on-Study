@@ -24,7 +24,7 @@ Gateway API는 kube-proxy replacement와 L7 proxy가 필요합니다. 이 장은
 
 기존 설치를 업그레이드합니다.
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 helm upgrade cilium cilium/cilium \
@@ -41,7 +41,7 @@ cilium status --wait
 
 GatewayClass를 확인합니다.
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 kubectl get gatewayclass
@@ -57,7 +57,7 @@ kubectl -n gateway-demo get gateway,httproute,svc,pod
 
 kind에는 기본 LoadBalancer 구현이 없습니다. 또한 Cilium Gateway가 생성하는 Service는 일반 Service selector가 없으므로 `kubectl port-forward service/...` 대상이 될 수 없습니다. 이 실습은 Gateway Service를 `NodePort`로 만들고 kind 노드 컨테이너 안에서 호출합니다.
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 kubectl -n gateway-demo rollout status deploy/web --timeout=120s
@@ -94,7 +94,7 @@ Gateway API는 Ingress보다 역할 분리가 좋습니다.
 
 ## 실패 시 확인
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 kubectl get crd | grep gateway.networking.k8s.io

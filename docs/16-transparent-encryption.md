@@ -10,7 +10,7 @@
 
 kind에서는 커널, container runtime, 노드 권한에 따라 packet capture 검증이 제한될 수 있습니다. 이 장은 kind 기본 검증과 Linux VM/bare metal 선택 검증을 나눕니다.
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 bash scripts/create-kind-cluster.sh --cluster-name cilium-encryption --config labs/kind/kind-cilium-encryption.yaml

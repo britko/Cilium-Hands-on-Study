@@ -4,7 +4,7 @@
 
 ## 적용 전제
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 kubectl apply -f labs/02-ebpf-datapath/bookinfo-lite.yaml
@@ -17,7 +17,7 @@ pod="$(kubectl -n app get pod -l app=frontend -o jsonpath='{.items[0].metadata.n
 
 신규 namespace는 기본적으로 모든 ingress/egress를 차단하고, 필요한 통신만 허용합니다.
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 kubectl apply -f labs/10-production-examples/namespace-zero-trust-baseline.yaml
@@ -42,7 +42,7 @@ hubble observe --namespace app --verdict DROPPED --since 5m
 
 업무 서비스가 GitHub, 결제사, 메일 발송 API 같은 외부 SaaS를 호출할 때는 전체 인터넷 egress를 열지 않고 FQDN allowlist로 제한합니다.
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 kubectl apply -f labs/10-production-examples/saas-egress-allowlist.yaml
@@ -67,7 +67,7 @@ hubble observe --namespace app --to-fqdn api.github.com --since 10m
 
 같은 API Service라도 호출자별로 허용 method/path를 다르게 제한할 수 있습니다.
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 kubectl delete -f labs/10-production-examples/namespace-zero-trust-baseline.yaml --ignore-not-found

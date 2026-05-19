@@ -8,7 +8,7 @@
 
 ## 준비
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 kubectl apply -f labs/02-ebpf-datapath/bookinfo-lite.yaml
@@ -22,7 +22,7 @@ pod="$(kubectl -n app get pod -l app=frontend -o jsonpath='{.items[0].metadata.n
 
 기본 동작을 확인합니다.
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 kubectl -n app exec "$pod" -- curl -sS http://api/get
@@ -37,7 +37,7 @@ kubectl apply -f labs/05-l7-policy/http-l7-policy.yaml
 
 허용되는 요청:
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 kubectl -n app exec "$pod" -- curl -sS http://api/get
@@ -45,7 +45,7 @@ kubectl -n app exec "$pod" -- curl -sS http://api/get
 
 차단되는 요청:
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 kubectl -n app exec "$pod" -- curl -m 5 -sS http://api/status/418

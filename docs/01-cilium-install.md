@@ -8,7 +8,6 @@
 
 이 장부터는 스크립트 대신 문서의 명령을 직접 실행하면서 진행합니다. kind 클러스터와 `kubectl`, `helm`, `cilium`, `hubble` CLI는 OS별 환경 준비 문서에서 이미 준비했다고 가정합니다.
 
-- [Windows WSL2](00-environment-windows-wsl2.md)
 - [macOS](00-environment-macos.md)
 - [Linux](00-environment-linux.md)
 

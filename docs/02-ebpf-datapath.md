@@ -16,7 +16,7 @@ kubectl -n app rollout status deploy/api
 
 트래픽을 발생시킵니다.
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 pod="$(kubectl -n app get pod -l app=frontend -o jsonpath='{.items[0].metadata.name}')"
@@ -74,7 +74,7 @@ kubectl -n kube-system exec ds/cilium -- cilium-dbg bpf ipcache list
 
 운영에서 배포나 노드 장애로 Pod IP는 계속 바뀝니다. Cilium 정책이 label/identity 기반으로 유지되는지 확인합니다.
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 kubectl -n app delete pod -l app=api

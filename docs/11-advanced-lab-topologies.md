@@ -41,7 +41,7 @@ Advanced 과정은 `kind`를 기본 실습 환경으로 사용하되, 실제 네
 
 ## 준비 확인
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 source scripts/use-local-tools.sh

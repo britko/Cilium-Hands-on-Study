@@ -5,7 +5,7 @@ CLUSTER_NAMES=()
 
 case "$(uname -s)" in
   MINGW*|MSYS*|CYGWIN*)
-    echo "Windows host shells are not supported. Use WSL2 Ubuntu and run this script there." >&2
+    echo "Unsupported shell environment. Use Linux or macOS Bash." >&2
     exit 1
     ;;
 esac

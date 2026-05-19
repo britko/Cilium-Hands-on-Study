@@ -10,7 +10,7 @@
 
 kube-proxy replacement는 기존 클러스터 설정과 충돌할 수 있으므로 별도 kind 클러스터를 사용합니다.
 
-Windows WSL2/macOS/Linux Bash:
+macOS/Linux Bash:
 
 ```bash
 bash scripts/create-kind-cluster.sh \
