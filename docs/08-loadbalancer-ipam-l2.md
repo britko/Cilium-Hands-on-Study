@@ -80,7 +80,7 @@ curl http://192.168.10.240/get
 - `externalTrafficPolicy: Local`은 L2 Announcement와 조합할 때 노드별 backend 유무 때문에 드롭을 만들 수 있으므로 기본은 `Cluster`로 둡니다.
 - Service 수가 많아지면 lease 갱신 API 트래픽이 늘어납니다. `k8sClientRateLimit.qps`와 `burst`를 운영 규모에 맞게 잡아야 합니다.
 
-kind에서는 Docker bridge 네트워크 안에서만 이 모델을 재현합니다. macOS, Windows WSL2, Colima 환경에서는 Docker bridge가 호스트 OS 뒤의 VM/NAT 안에 있으므로 노트북 브라우저에서 VIP로 직접 접근하는 검증은 환경별로 달라집니다. 이 문서의 검증 기준은 kind 노드 컨테이너 내부에서 VIP로 접근하는 것입니다.
+kind에서는 Docker bridge 네트워크 안에서만 이 모델을 재현합니다. macOS, Colima 환경에서는 Docker bridge가 호스트 OS 뒤의 VM/NAT 안에 있으므로 노트북 브라우저에서 VIP로 직접 접근하는 검증은 환경별로 달라집니다. 이 문서의 검증 기준은 kind 노드 컨테이너 내부에서 VIP로 접근하는 것입니다.
 
 ## kind 네트워크 확인
 
@@ -139,11 +139,22 @@ kubectl -n kube-system get pod -l k8s-app=cilium -o wide
 특정 agent의 내부 L2 announce 상태를 확인합니다.
 
 ```bash
-agent="$(kubectl -n kube-system get pod -l k8s-app=cilium -o jsonpath='{.items[0].metadata.name}')"
+lease="$(kubectl -n kube-system get lease -o name | grep cilium-l2announce | head -n 1 | sed 's|lease.coordination.k8s.io/||')"
+announcer_node="$(kubectl -n kube-system get lease "$lease" -o jsonpath='{.spec.holderIdentity}')"
+agent="$(kubectl -n kube-system get pod -l k8s-app=cilium \
+  --field-selector spec.nodeName="$announcer_node" \
+  -o jsonpath='{.items[0].metadata.name}')"
+
 kubectl -n kube-system exec "$agent" -- cilium-dbg shell -- db/show l2-announce
 ```
 
-출력에 Gateway Service의 VIP와 `eth0`가 보이면 L2 Announcement가 적용된 것입니다.
+출력에 Gateway Service의 VIP와 `eth0`가 보이면 L2 Announcement가 적용된 것입니다. Lease holder가 아닌 다른 Cilium agent에서 같은 명령을 실행하면 다음처럼 header만 보일 수 있습니다.
+
+```text
+IP   NetworkInterface
+```
+
+이 경우는 실패가 아니라 해당 agent가 현재 VIP announcer가 아니라는 뜻입니다. 먼저 `kubectl -n kube-system get lease | grep cilium-l2announce`에서 holder node를 확인하고, 그 노드의 Cilium Pod에서 내부 상태를 조회합니다.
 
 ## 실패 시 확인
 

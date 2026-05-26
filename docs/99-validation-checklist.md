@@ -211,11 +211,17 @@ kubectl apply -f labs/02-ebpf-datapath/bookinfo-lite.yaml
 pod=$(kubectl -n app get pod -l app=frontend -o jsonpath='{.items[0].metadata.name}')
 kubectl apply -f labs/10-production-examples/namespace-zero-trust-baseline.yaml
 kubectl -n app exec "$pod" -- curl -sS http://api/get
+kubectl -n app exec "$pod" -- curl -m 5 -I https://example.com || echo "blocked as expected"
 kubectl apply -f labs/10-production-examples/saas-egress-allowlist.yaml
 kubectl -n app exec "$pod" -- curl -I https://api.github.com
 kubectl -n app exec "$pod" -- curl -m 5 -I https://example.com
 hubble observe --namespace app --verdict DROPPED --since 5m
-kubectl delete -f labs/10-production-examples/namespace-zero-trust-baseline.yaml --ignore-not-found
+kubectl -n app delete networkpolicy \
+  production-default-deny \
+  allow-egress-to-cluster-dns \
+  allow-frontend-to-api \
+  allow-frontend-egress-to-api \
+  --ignore-not-found
 kubectl apply -f labs/10-production-examples/internal-api-l7-guardrail.yaml
 kubectl -n app exec "$pod" -- curl -sS http://api/get
 kubectl -n app exec "$pod" -- curl -m 5 -X POST -sS http://api/post
@@ -224,6 +230,7 @@ kubectl -n app exec "$pod" -- curl -m 5 -X POST -sS http://api/post
 통과 기준:
 
 - zero-trust baseline 적용 후에도 명시적으로 허용한 `frontend -> api` 호출은 성공
+- zero-trust baseline만 적용된 상태에서 허용하지 않은 외부 egress는 차단
 - `api.github.com` 호출은 성공하고 허용하지 않은 외부 FQDN 호출은 차단
 - `GET /get`은 허용되고 `POST /post`는 L7 정책으로 차단
 - Hubble에서 허용/차단 flow와 DNS/HTTP 근거 확인 가능
@@ -313,7 +320,7 @@ kubectl delete -f labs/13-bgp-control-plane/lb-pool.yaml --ignore-not-found
 docker compose -f labs/13-bgp-control-plane/frr/docker-compose.yaml down
 kubectl delete -f labs/10-production-examples/internal-api-l7-guardrail.yaml --ignore-not-found
 kubectl delete -f labs/10-production-examples/saas-egress-allowlist.yaml --ignore-not-found
-kubectl delete -f labs/10-production-examples/namespace-zero-trust-baseline.yaml --ignore-not-found
+kubectl -n app delete networkpolicy production-default-deny allow-egress-to-cluster-dns allow-frontend-to-api allow-frontend-egress-to-api --ignore-not-found
 kubectl delete -f labs/09-troubleshooting/deny-dns-egress.yaml --ignore-not-found
 kubectl delete -f labs/09-troubleshooting/broken-service-selector.yaml --ignore-not-found
 kubectl delete -f labs/08-loadbalancer-ipam-l2/lb-ipam-l2.yaml --ignore-not-found

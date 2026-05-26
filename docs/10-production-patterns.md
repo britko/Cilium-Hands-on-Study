@@ -22,6 +22,7 @@ macOS/Linux Bash:
 ```bash
 kubectl apply -f labs/10-production-examples/namespace-zero-trust-baseline.yaml
 kubectl -n app exec "$pod" -- curl -sS http://api/get
+kubectl -n app exec "$pod" -- curl -m 5 -I https://example.com || echo "blocked as expected"
 ```
 
 이 예시는 다음 운영 기준을 표현합니다.
@@ -37,6 +38,8 @@ kubectl -n app exec "$pod" -- curl -sS http://api/get
 hubble observe --namespace app --since 5m
 hubble observe --namespace app --verdict DROPPED --since 5m
 ```
+
+`frontend -> api`는 명시적으로 허용했기 때문에 성공해야 하고, `https://example.com` 같은 외부 egress는 아직 허용하지 않았기 때문에 실패해야 합니다. 이 실패 케이스를 먼저 확인해야 default deny가 실제로 적용되었는지 검증할 수 있습니다.
 
 ## 패턴 2: 외부 SaaS Egress Allowlist
 
@@ -60,7 +63,7 @@ kubectl -n app exec "$pod" -- curl -m 5 -I https://example.com
 
 ```bash
 hubble observe --namespace app --protocol dns --since 10m
-hubble observe --namespace app --to-fqdn api.github.com --since 10m
+hubble observe --from-namespace app --to-fqdn api.github.com --since 10m
 ```
 
 ## 패턴 3: 내부 API L7 최소 권한
@@ -70,7 +73,12 @@ hubble observe --namespace app --to-fqdn api.github.com --since 10m
 macOS/Linux Bash:
 
 ```bash
-kubectl delete -f labs/10-production-examples/namespace-zero-trust-baseline.yaml --ignore-not-found
+kubectl -n app delete networkpolicy \
+  production-default-deny \
+  allow-egress-to-cluster-dns \
+  allow-frontend-to-api \
+  allow-frontend-egress-to-api \
+  --ignore-not-found
 kubectl apply -f labs/10-production-examples/internal-api-l7-guardrail.yaml
 kubectl -n app exec "$pod" -- curl -sS http://api/get
 kubectl -n app exec "$pod" -- curl -m 5 -X POST -sS http://api/post
@@ -123,5 +131,10 @@ hubble observe --namespace app --protocol http --since 10m
 ```bash
 kubectl delete -f labs/10-production-examples/internal-api-l7-guardrail.yaml --ignore-not-found
 kubectl delete -f labs/10-production-examples/saas-egress-allowlist.yaml --ignore-not-found
-kubectl delete -f labs/10-production-examples/namespace-zero-trust-baseline.yaml --ignore-not-found
+kubectl -n app delete networkpolicy \
+  production-default-deny \
+  allow-egress-to-cluster-dns \
+  allow-frontend-to-api \
+  allow-frontend-egress-to-api \
+  --ignore-not-found
 ```
