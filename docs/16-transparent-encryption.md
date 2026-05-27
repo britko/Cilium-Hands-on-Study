@@ -10,6 +10,8 @@
 
 kind에서는 커널, container runtime, 노드 권한에 따라 packet capture 검증이 제한될 수 있습니다. 이 장은 kind 기본 검증과 Linux VM/bare metal 선택 검증을 나눕니다.
 
+`cilium-encryption`은 encryption datapath 검증용 선택 클러스터입니다. 리소스가 부족하면 BGP/Egress/Cluster Mesh 선택 클러스터를 삭제한 뒤 진행합니다.
+
 macOS/Linux Bash:
 
 ```bash
@@ -57,3 +59,10 @@ kubectl -n kube-system exec ds/cilium -- cilium-dbg status --verbose
 ## 참고
 
 - WireGuard encryption: https://docs.cilium.io/en/stable/security/network/encryption-wireguard/
+
+## 정리
+
+```bash
+kubectl delete -f labs/02-ebpf-datapath/bookinfo-lite.yaml --ignore-not-found
+kind delete cluster --name cilium-encryption
+```

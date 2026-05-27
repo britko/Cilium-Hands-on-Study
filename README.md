@@ -24,6 +24,14 @@ Kubernetes 네트워킹 기본기를 갖춘 사용자를 위한 Cilium basic-to-
 - Linux + Docker Engine
 - kind 로컬 Kubernetes 클러스터
 
+권장 리소스는 동시에 유지하는 kind 클러스터 수에 따라 달라집니다.
+
+| 범위 | 권장 리소스 | 비고 |
+|---|---|---|
+| 기본 과정 `01-05`, `09-10` | CPU 4 cores, RAM 8 GiB, disk 30 GiB 이상 | `cilium-study` 단일 클러스터 기준 |
+| kube-proxy replacement, Gateway, L2 실습 `06-08`, `15`, `17-18` | CPU 6 cores, RAM 12 GiB, disk 40 GiB 이상 | `cilium-study-kpr`를 함께 유지하는 경우 |
+| Advanced 선택 실습 `12-16` | CPU 8 cores, RAM 16 GiB, disk 50 GiB 이상 | Cluster Mesh, BGP, Egress, Encryption 클러스터를 장별로 생성/삭제하는 기준 |
+
 지원 수준은 다음을 기준으로 합니다.
 
 - Tier 1: Linux Docker Engine, macOS Colima

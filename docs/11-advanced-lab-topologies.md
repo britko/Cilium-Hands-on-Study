@@ -36,8 +36,24 @@ Advanced 과정은 `kind`를 기본 실습 환경으로 사용하되, 실제 네
 
 - 장마다 필요한 Kubernetes context를 먼저 명시합니다.
 - 기존 basic 과정의 `cilium-study`와 `cilium-study-kpr`를 재사용하되, 다중 클러스터 실습은 별도 kind 클러스터를 사용합니다.
+- 로컬 리소스가 제한된 환경에서는 Advanced 실습 클러스터를 동시에 여러 개 유지하지 않습니다.
 - VM/bare metal 절차는 선택 심화로 두고, kind에서 가능한 최소 검증을 항상 제공합니다.
 - 네트워크 주소는 예시로 쓰고, 실습 전 Docker/VM subnet과 충돌 여부를 확인합니다.
+
+## 리소스 운영 기준
+
+Advanced 실습은 기능별 datapath 옵션이 달라서 모든 장을 하나의 클러스터에 계속 누적하지 않습니다. 대신 다음 기준으로 클러스터를 관리합니다.
+
+| 범위 | 권장 클러스터 | 리소스 기준 |
+|---|---|---|
+| 01-05, 09-10, 20-21 | `cilium-study` | 기본 클러스터로 재사용 |
+| 06-08, 15, 17-18 | `cilium-study-kpr` | kube-proxy replacement 클러스터로 재사용 |
+| 12 | `cilium-east`, `cilium-west` | Cluster Mesh 검증 중에만 두 클러스터를 유지하고, 완료 후 삭제 |
+| 13 | `cilium-bgp` | BGP 검증용 선택 클러스터입니다. 12장 클러스터 삭제 후 진행 |
+| 14 | `cilium-egress` | Egress Gateway 검증용 선택 클러스터입니다. 다른 선택 클러스터와 동시에 유지하지 않음 |
+| 16 | `cilium-encryption` | Encryption 검증용 선택 클러스터입니다. 필요한 경우에만 생성 |
+
+메모리나 CPU가 부족하면 `cilium-study-kpr`만 남기고 `cilium-east`, `cilium-west`, `cilium-bgp`, `cilium-egress`, `cilium-encryption`은 장별로 생성했다가 바로 삭제합니다.
 
 ## 준비 확인
 
