@@ -9,7 +9,11 @@ spec:
           app: client
   destinationCIDRs:
     - 0.0.0.0/0
+  excludedCIDRs:
+    - 10.60.0.0/16
+    - 10.61.0.0/16
+    - 172.18.0.0/16
   egressGateway:
     nodeSelector:
       matchLabels:
-        kubernetes.io/os: linux
+        kubernetes.io/hostname: cilium-egress-worker2
