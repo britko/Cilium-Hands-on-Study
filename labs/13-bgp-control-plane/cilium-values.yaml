@@ -1,8 +1,8 @@
 ipam:
   mode: kubernetes
 kubeProxyReplacement: true
-gatewayAPI:
-  enabled: true
+k8sServiceHost: cilium-bgp-control-plane
+k8sServicePort: 6443
 bgpControlPlane:
   enabled: true
 hubble:
