@@ -6,6 +6,26 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: frontend
+  namespace: mesh-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: curl
+          image: curlimages/curl:8.11.1
+          command: ["sleep", "3600"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
   name: api
   namespace: mesh-demo
 spec:
@@ -21,8 +41,11 @@ spec:
         cluster: west
     spec:
       containers:
-        - name: httpbin
-          image: mccutchen/go-httpbin:v2.14.0
+        - name: echo
+          image: hashicorp/http-echo:1.0
+          args:
+            - -listen=:8080
+            - -text=west-api
           ports:
             - containerPort: 8080
 ---

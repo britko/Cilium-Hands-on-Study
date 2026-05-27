@@ -41,8 +41,11 @@ spec:
         cluster: east
     spec:
       containers:
-        - name: httpbin
-          image: mccutchen/go-httpbin:v2.14.0
+        - name: echo
+          image: hashicorp/http-echo:1.0
+          args:
+            - -listen=:8080
+            - -text=east-api
           ports:
             - containerPort: 8080
 ---
