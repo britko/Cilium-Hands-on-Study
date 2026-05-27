@@ -238,12 +238,42 @@ kubectl -n app exec "$pod" -- curl -m 5 -X POST -sS http://api/post
 ## Advanced Validation
 
 Advanced 과정은 환경 의존성이 높으므로 core validation과 선택 validation을 분리합니다.
+로컬 리소스가 부족한 환경에서는 12장 이후의 선택 클러스터를 동시에 유지하지 않습니다. Cluster Mesh 검증이 끝나면 `cilium-east`, `cilium-west`를 삭제하고, BGP/Egress/Encryption 선택 클러스터는 장별로 하나씩 생성해 검증한 뒤 삭제합니다.
 
 ### 12. Cluster Mesh
 
 ```bash
 bash scripts/create-kind-cluster.sh --cluster-name cilium-east --config labs/kind/kind-cilium-clustermesh-east.yaml
 bash scripts/create-kind-cluster.sh --cluster-name cilium-west --config labs/kind/kind-cilium-clustermesh-west.yaml
+
+openssl genrsa -out /tmp/cilium-clustermesh-ca.key 4096
+openssl req -new -x509 -days 3650 \
+  -key /tmp/cilium-clustermesh-ca.key \
+  -out /tmp/cilium-clustermesh-ca.crt \
+  -subj "/CN=cilium-clustermesh-ca"
+CILIUM_CA_CERT="$(base64 < /tmp/cilium-clustermesh-ca.crt | tr -d '\n')"
+CILIUM_CA_KEY="$(base64 < /tmp/cilium-clustermesh-ca.key | tr -d '\n')"
+
+helm upgrade --install cilium cilium/cilium \
+  --kube-context kind-cilium-east \
+  --version 1.19.3 \
+  --namespace kube-system \
+  --values labs/12-cluster-mesh/cilium-values-east.yaml \
+  --set-string tls.ca.cert="${CILIUM_CA_CERT}" \
+  --set-string tls.ca.key="${CILIUM_CA_KEY}"
+helm upgrade --install cilium cilium/cilium \
+  --kube-context kind-cilium-west \
+  --version 1.19.3 \
+  --namespace kube-system \
+  --values labs/12-cluster-mesh/cilium-values-west.yaml \
+  --set-string tls.ca.cert="${CILIUM_CA_CERT}" \
+  --set-string tls.ca.key="${CILIUM_CA_KEY}"
+
+cilium status --context kind-cilium-east --wait
+cilium status --context kind-cilium-west --wait
+cilium clustermesh enable --context kind-cilium-east --service-type NodePort
+cilium clustermesh enable --context kind-cilium-west --service-type NodePort
+cilium clustermesh connect --context kind-cilium-east --destination-context kind-cilium-west
 kubectl --context kind-cilium-east apply -f labs/12-cluster-mesh/east-app.yaml
 kubectl --context kind-cilium-west apply -f labs/12-cluster-mesh/west-app.yaml
 cilium clustermesh status --context kind-cilium-east
@@ -252,9 +282,19 @@ cilium clustermesh status --context kind-cilium-west
 
 통과 기준:
 
+- 두 클러스터의 `kube-system/cilium-ca` CA certificate 값이 같음
 - 두 클러스터의 Cluster Mesh status가 ready
-- global service 호출 성공
-- west backend 축소 후에도 장애 범위 확인 가능
+- east frontend에서 global service 반복 호출 시 `east-api`, `west-api` backend가 모두 관찰됨
+- west frontend에서 global service 반복 호출 시 `east-api`, `west-api` backend가 모두 관찰됨
+- east backend 축소 시 east frontend가 `west-api`로 계속 응답받음
+- west backend 축소 시 west frontend가 `east-api`로 계속 응답받음
+
+리소스가 부족하면 13장으로 넘어가기 전에 정리합니다.
+
+```bash
+kind delete cluster --name cilium-east
+kind delete cluster --name cilium-west
+```
 
 ### 13. BGP Control Plane
 
@@ -278,13 +318,23 @@ docker exec cilium-frr vtysh -c "show bgp ipv4 unicast"
 kubectl apply -f labs/14-egress-gateway/demo-app.yaml
 kubectl apply -f labs/14-egress-gateway/egress-policy.yaml
 pod="$(kubectl -n egress-demo get pod -l app=client -o jsonpath='{.items[0].metadata.name}')"
-kubectl -n egress-demo exec "$pod" -- curl -sS https://ifconfig.me
+kubectl -n egress-demo exec "$pod" -- curl -k -sS https://1.1.1.1/cdn-cgi/trace
 ```
 
 통과 기준:
 
-- kind에서는 정책 object와 flow 확인
+- kind에서는 정책 object, flow, IP 직접 egress 확인
 - VM/bare metal에서는 외부 echo 서버의 source IP가 gateway 경로와 일치
+
+DNS 환경 점검:
+
+```bash
+kubectl -n egress-demo exec "$pod" -- nslookup ifconfig.me
+kubectl -n egress-demo exec "$pod" -- nslookup kubernetes.default.svc.cluster.local
+kubectl -n kube-system logs -l k8s-app=kube-dns --tail=80
+```
+
+kind에서 `nslookup ifconfig.me`만 timeout이면 CoreDNS가 Docker host DNS(`172.18.0.1:53` 등)로 forward하지 못하는 문제일 수 있습니다. 내부 DNS 조회와 `https://1.1.1.1/cdn-cgi/trace`가 성공하면 Egress Gateway 기본 검증은 통과로 봅니다.
 
 ### 15-21. 운영 심화
 
