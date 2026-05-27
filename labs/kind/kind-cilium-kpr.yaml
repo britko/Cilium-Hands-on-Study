@@ -14,6 +14,14 @@ nodes:
         hostPort: 30080
         listenAddress: 127.0.0.1
         protocol: TCP
+      - containerPort: 30081
+        hostPort: 30081
+        listenAddress: 127.0.0.1
+        protocol: TCP
+      - containerPort: 30082
+        hostPort: 30082
+        listenAddress: 127.0.0.1
+        protocol: TCP
   - role: worker
     image: kindest/node:v1.34.0@sha256:7416a61b42b1662ca6ca89f02028ac133a309a2a30ba309614e8ec94d976dc5a
   - role: worker

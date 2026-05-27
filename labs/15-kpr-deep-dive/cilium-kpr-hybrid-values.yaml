@@ -6,7 +6,7 @@ k8sServiceHost: cilium-study-kpr-control-plane
 k8sServicePort: 6443
 
 loadBalancer:
-  mode: snat
+  mode: hybrid
 
 hostServices:
   enabled: false
