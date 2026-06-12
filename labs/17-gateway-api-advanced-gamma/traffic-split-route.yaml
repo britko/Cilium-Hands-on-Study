@@ -58,12 +58,6 @@ spec:
         - path:
             type: PathPrefix
             value: /version
-      filters:
-        - type: URLRewrite
-          urlRewrite:
-            path:
-              type: ReplaceFullPath
-              replaceFullPath: /get
       backendRefs:
         - name: web-v1
           port: 80

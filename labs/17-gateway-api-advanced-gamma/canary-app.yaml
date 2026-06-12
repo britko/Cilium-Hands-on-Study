@@ -21,8 +21,11 @@ spec:
         version: v1
     spec:
       containers:
-        - name: httpbin
-          image: mccutchen/go-httpbin:v2.14.0
+        - name: echo
+          image: hashicorp/http-echo:0.2.3
+          args:
+            - "-listen=:8080"
+            - "-text=version=v1"
           ports:
             - containerPort: 8080
 ---
@@ -44,8 +47,11 @@ spec:
         version: v2
     spec:
       containers:
-        - name: httpbin
-          image: mccutchen/go-httpbin:v2.14.0
+        - name: echo
+          image: hashicorp/http-echo:0.2.3
+          args:
+            - "-listen=:8080"
+            - "-text=version=v2"
           ports:
             - containerPort: 8080
 ---

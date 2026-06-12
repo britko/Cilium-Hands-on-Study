@@ -136,6 +136,8 @@ kind에서는 기본값인 `snat`로 Cilium service map과 `externalTrafficPolic
 
 kind에서도 `loadBalancer.mode`를 바꿔 Cilium agent가 해당 모드로 기동되는지 확인할 수 있습니다. 다만 kind의 Docker 네트워크와 localhost port mapping은 실제 외부 LoadBalancer 경로가 아니므로, source IP 보존이나 DSR return path 검증을 통과 기준으로 삼지 않습니다.
 
+이 섹션의 Helm 명령은 `labs/15-kpr-deep-dive/*.yaml` 또는 `labs/01-install/cilium-kpr-values.yaml`을 다시 적용합니다. 이 values 파일들은 Gateway API 설정을 포함하지 않습니다. 따라서 07장에서 Gateway API를 켰던 같은 `cilium-study-kpr` 클러스터를 이어 쓰는 경우, 이 섹션을 수행한 뒤에는 Gateway API controller 설정이 꺼졌을 수 있습니다. 17장은 이 상태 충돌을 피하기 위해 별도 `cilium-gateway-advanced` 클러스터에서 진행합니다.
+
 검증 루트:
 
 1. Helm values로 모드를 변경합니다.
