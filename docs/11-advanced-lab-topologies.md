@@ -52,8 +52,9 @@ Advanced 실습은 기능별 datapath 옵션이 달라서 모든 장을 하나�
 | 13 | `cilium-bgp` | BGP 검증용 선택 클러스터입니다. 12장 클러스터 삭제 후 진행 |
 | 14 | `cilium-egress` | Egress Gateway 검증용 선택 클러스터입니다. 다른 선택 클러스터와 동시에 유지하지 않음 |
 | 16 | `cilium-encryption` | Encryption 검증용 선택 클러스터입니다. 필요한 경우에만 생성 |
+| 19 | `cilium-policy-host-firewall` | cluster-wide policy baseline과 host firewall 논의를 분리하기 위한 전용 클러스터입니다. 완료 후 삭제 |
 
-메모리나 CPU가 부족하면 `cilium-study-kpr`만 남기고 `cilium-east`, `cilium-west`, `cilium-bgp`, `cilium-egress`, `cilium-encryption`은 장별로 생성했다가 바로 삭제합니다.
+메모리나 CPU가 부족하면 `cilium-study-kpr`만 남기고 `cilium-east`, `cilium-west`, `cilium-bgp`, `cilium-egress`, `cilium-encryption`, `cilium-policy-host-firewall`은 장별로 생성했다가 바로 삭제합니다.
 
 ## 준비 확인
 

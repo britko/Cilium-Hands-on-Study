@@ -336,20 +336,109 @@ kubectl -n kube-system logs -l k8s-app=kube-dns --tail=80
 
 kind에서 `nslookup ifconfig.me`만 timeout이면 CoreDNS가 Docker host DNS(`172.18.0.1:53` 등)로 forward하지 못하는 문제일 수 있습니다. 내부 DNS 조회와 `https://1.1.1.1/cdn-cgi/trace`가 성공하면 Egress Gateway 기본 검증은 통과로 봅니다.
 
+### 17. Gateway API Advanced & GAMMA
+
+17장은 15장의 kube-proxy replacement deep dive와 같은 클러스터를 재사용하지 않습니다. Gateway API CRD와 Cilium Gateway controller 상태 충돌을 피하기 위해 전용 `cilium-gateway-advanced` 클러스터에서 검증합니다.
+
+```bash
+bash scripts/create-kind-cluster.sh --cluster-name cilium-gateway-advanced --config labs/kind/kind-cilium-gateway-advanced.yaml
+kubectl config use-context kind-cilium-gateway-advanced
+
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.4.1/config/crd/standard/gateway.networking.k8s.io_gatewayclasses.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.4.1/config/crd/standard/gateway.networking.k8s.io_gateways.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.4.1/config/crd/standard/gateway.networking.k8s.io_httproutes.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.4.1/config/crd/standard/gateway.networking.k8s.io_referencegrants.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.4.1/config/crd/standard/gateway.networking.k8s.io_grpcroutes.yaml
+
+helm repo add cilium https://helm.cilium.io/ --force-update
+helm repo update cilium
+
+helm upgrade --install cilium cilium/cilium \
+  --version 1.19.3 \
+  --namespace kube-system \
+  --values labs/17-gateway-api-advanced-gamma/cilium-values.yaml
+cilium status --wait
+
+kubectl apply -f labs/17-gateway-api-advanced-gamma/canary-app.yaml
+kubectl apply -f labs/17-gateway-api-advanced-gamma/traffic-split-route.yaml
+kubectl -n gateway-advanced get gateway,httproute,svc,pod
+```
+
+통과 기준:
+
+- `CiliumGatewayClassConfig`, `GatewayClass`, `Gateway`, `HTTPRoute` CRD가 존재함
+- `advanced-gateway`와 `web-split` HTTPRoute가 Accepted 상태
+- Gateway Service가 NodePort로 생성됨
+
 ### 15-21. 운영 심화
 
 ```bash
 kubectl apply --dry-run=client -f labs/15-kpr-deep-dive/source-ip-demo.yaml
 kubectl apply --dry-run=client -f labs/17-gateway-api-advanced-gamma/canary-app.yaml
-kubectl apply --dry-run=client -f labs/17-gateway-api-advanced-gamma/traffic-split-route.yaml
-kubectl apply --dry-run=client -f labs/19-policy-host-firewall/team-baseline.yaml
-kubectl apply --dry-run=client -f labs/19-policy-host-firewall/service-exception.yaml
 ```
 
 통과 기준:
 
 - kind에서 가능한 manifest는 client dry-run 통과
-- encryption, mutual auth, metrics, upgrade 장은 사전 상태 기록과 rollback 명령이 문서에 포함됨
+- encryption, metrics, upgrade 장은 사전 상태 기록과 rollback 명령이 문서에 포함됨
+
+### 18. Mutual Auth & SPIRE
+
+18장은 전용 `cilium-mutual-auth` 클러스터에서 검증합니다.
+
+```bash
+bash scripts/create-kind-cluster.sh --cluster-name cilium-mutual-auth --config labs/kind/kind-cilium-mutual-auth.yaml
+kubectl config use-context kind-cilium-mutual-auth
+
+helm repo add cilium https://helm.cilium.io/ --force-update
+helm repo update cilium
+
+helm upgrade --install cilium cilium/cilium \
+  --version 1.19.3 \
+  --namespace kube-system \
+  --values labs/18-mutual-auth-spire/cilium-values.yaml
+cilium status --wait
+
+kubectl -n cilium-spire get pods -o wide
+kubectl apply -f labs/02-ebpf-datapath/bookinfo-lite.yaml
+kubectl apply -f labs/18-mutual-auth-spire/mutual-auth-policy.yaml
+```
+
+통과 기준:
+
+- `cilium-spire` namespace와 SPIRE server/agent Pod가 존재함
+- `frontend-to-api-mutual-auth` CiliumNetworkPolicy가 적용됨
+- `frontend`에서 `api/get` 호출은 성공하고, 허용하지 않은 path/method는 실패함
+
+### 19. Policy Design at Scale & Host Firewall
+
+19장은 전용 `cilium-policy-host-firewall` 클러스터에서 검증합니다. 이 장의 cluster-wide baseline이 기본 `cilium-study`나 18장 `cilium-mutual-auth` 클러스터에 남지 않게 분리합니다.
+
+```bash
+bash scripts/create-kind-cluster.sh --cluster-name cilium-policy-host-firewall --config labs/kind/kind-cilium-policy-host-firewall.yaml
+kubectl config use-context kind-cilium-policy-host-firewall
+
+helm repo add cilium https://helm.cilium.io/ --force-update
+helm repo update cilium
+
+helm upgrade --install cilium cilium/cilium \
+  --version 1.19.3 \
+  --namespace kube-system \
+  --values labs/01-install/cilium-values.yaml
+cilium status --wait
+cilium hubble enable --ui
+
+kubectl apply -f labs/02-ebpf-datapath/bookinfo-lite.yaml
+kubectl apply -f labs/19-policy-host-firewall/team-baseline.yaml
+kubectl apply -f labs/19-policy-host-firewall/service-exception.yaml
+```
+
+통과 기준:
+
+- `platform-dns-egress` CCNP와 `app-default-deny` NetworkPolicy가 적용됨
+- `frontend-to-api-readonly`, `frontend-egress-to-api` CNP가 적용됨
+- `GET /get`은 허용되고, 허용하지 않은 method/path 또는 외부 egress는 차단됨
+- Hubble에서 허용/차단 flow가 구분됨
 
 ## 22. Cleanup
 
@@ -387,6 +476,9 @@ kind delete cluster --name cilium-west
 kind delete cluster --name cilium-bgp
 kind delete cluster --name cilium-egress
 kind delete cluster --name cilium-encryption
+kind delete cluster --name cilium-gateway-advanced
+kind delete cluster --name cilium-mutual-auth
+kind delete cluster --name cilium-policy-host-firewall
 bash scripts/cleanup.sh
 ```
 
