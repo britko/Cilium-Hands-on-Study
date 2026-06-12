@@ -19,3 +19,21 @@ spec:
             http:
               - method: GET
                 path: /get
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: frontend-egress-to-api
+  namespace: app
+spec:
+  endpointSelector:
+    matchLabels:
+      app: frontend
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            app: api
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
